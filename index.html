@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sneakon Chat</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #121212;
+      color: #eee;
+    }
+
+    .nav {
+      width: 80px;
+      background-color: #1c1c1c;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+    }
+
+    .servers div {
+      width: 50px;
+      height: 50px;
+      background-color: #444;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 50px;
+      font-size: 0.8em;
+      color: #00ffcc;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+
+    .channels {
+      width: 220px;
+      background-color: #222;
+      border-right: 1px solid #333;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .chatPane {
+      flex-grow: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    h2, h3, h4 {
+      color: #fefefe;
+      margin-top: 16px;
+    }
+
+    input, button {
+      padding: 6px 10px;
+      margin: 4px 0;
+      font-size: 14px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    input {
+      background: #1e1e1e;
+      color: #fefefe;
+    }
+
+    button {
+      background: #2e2e2e;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    #googleLoginBtn {
+      padding: 10px 16px;
+      background-color: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 6px;
+      background: #202020;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    li:hover {
+      background: #333;
+    }
+
+    .sneakoAvatar {
+      width: 32px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    .msg-in, .msg-out {
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      background: #1d1d1d;
+    }
+
+    .msg-in {
+      border-left: 3px solid #66c;
+    }
+
+    .msg-out {
+      border-right: 3px solid #6c6;
+      text-align: right;
+    }
+
+    #chatWindow {
+      flex-grow: 1;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 10px;
+      border: 1px solid #444;
+    }
+
+    .settingsPanel, .shopPanel {
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 12px;
+      border: 1px solid #444;
+    }
+
+    .shopItem {
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .pinBtn, .emojiBtn {
+      background: transparent;
+      color: #888;
+      border: none;
+      font-size: 16px;
+      margin-right: 6px;
+      cursor: pointer;
+    }
+
+    .pinBtn:hover, .emojiBtn:hover {
+      color: #ffc;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #uploadPanel {
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      margin-top: 20px;
+    }
+
+    #uploadPreview img {
+      max-width: 160px;
+      margin: 6px;
+      border-radius: 6px;
+      border: 1px solid #555;
+    }
+
+    .uploadedFileItem {
+      background: #2a2a2a;
+      padding: 8px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div class="servers">
+      <div>S</div>
+      <div>+</div>
+    </div>
+  </div>
+
+  <div class="channels">
+    <h3>Servers</h3>
+    <ul id="serverList"></ul>
+    <button id="createServerBtn">➕ Create Server</button>
+
+    <h3 id="channelHeader">Channels</h3>
+    <ul id="channelList"></ul>
+    <button id="createChannelBtn">➕ Create Channel</button>
+  </div>
+
+  <div class="chatPane">
+    <div id="modal">
+  <h2>Sign in to Sneakon</h2>
+
+  <!-- 🔒 Username Login -->
+  <input id="usernameInput" placeholder="Username" />
+  <input id="avatarInput" placeholder="Avatar URL" />
+  <button id="setUsernameBtn">Login with Password</button>
+
+  <!-- 🔐 Google OAuth -->
+  <div style="margin-top: 20px;">
+    <h3>or</h3>
+    <div id="googleLoginBtn"></div>
+  </div>
+</div>
+
+    <div id="main" class="hidden">
+      <h2 id="displayName"></h2>
+      <img id="avatarPreview" class="sneakoAvatar" />
+      <div id="voiceStatus"></div>
+      <button id="settingsTabBtn" hidden>⚙️ Settings</button>
+      <button id="exploreBtn">😃 Explore</button>
+
+      <h3 id="chatTitle"></h3>
+      <div id="chatWindow"></div>
+      <input id="msgInput" placeholder="Type a message..." />
+      <button id="sendBtn">Send</button>
+
+      <h3>Upload Media (Coming Soon)</h3>
+      <div id="uploadPanel">
+        <input type="file" id="uploadInput" multiple disabled/>
+        <button id="uploadBtn" disabled>Upload</button>
+        <div id="uploadPreview"></div>
+      </div>
+
+      <div id="uploadedFiles"></div>
+
+      <div id="explorePanel" class="hidden">
+        <h3>Explore</h3>
+        <div id="exploreFeed"></div>
+      </div>
+
+      <div id="settingsPanel" class="hidden settingsPanel">
+        <h3>User Settings</h3>
+        <label>New Avatar URL:</label>
+        <input id="settingsAvatarInput" />
+        <button id="updateAvatarBtn">Update Avatar</button>
+        <p>Sneakoins: <span id="coinDisplay">0</span></p>
+      </div>
+
+      <div id="shopPanel" class="hidden shopPanel">
+        <h3>Shop</h3>
+        <div id="shopItems">
+          <div class="shopItem">
+            ✨ Animated Avatar - 100 Sneakoins
+            <button id="buyAvatarBtn" class="emojiBtn">Unlock</button>
+          </div>
+          <div class="shopItem">
+            📜 Lore Pack - 250 Sneakoins
+            <button id="buyLoreBtn" class="emojiBtn">Unlock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧪 Firebase Auth (Google) and Upload Features -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

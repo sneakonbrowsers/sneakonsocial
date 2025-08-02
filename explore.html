@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sneakon Explore</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      margin-bottom: 2em;
+      padding: 1em;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin: 0.5em 0;
+      padding: 0.7em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    button {
+      background: #0066cc;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background: #004999;
+    }
+    #feed .post {
+      background: #fff;
+      margin-bottom: 1em;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    .post img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+    .username {
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      color: #0066cc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sneakon Explore</h1>
+  <form id="uploadForm">
+    <input type="text" id="username" placeholder="Your Username" required />
+    <input type="text" id="caption" placeholder="Caption" required />
+    <input type="file" id="imageUpload" accept="image/*" required />
+    <button type="submit">Upload Post</button>
+  </form>
+  <div id="feed"></div>
+
+  <script src="explore.js"></script>
+</body>
+</html>
