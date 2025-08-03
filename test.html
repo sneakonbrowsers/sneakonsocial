@@ -212,6 +212,11 @@
     <input id="chat-input" placeholder="Type a message...">
     <button id="send-btn" onclick="sendMessage()">Send</button>
   </div>
+  <!-- Firebase App (core SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+
+<!-- Firebase Database -->
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
 <script>
   let messageRefreshInterval = null;
   const BASE = 'https://fidgety-6bac3-default-rtdb.firebaseio.com';
