@@ -464,9 +464,9 @@ async function loadChannels(serverName, isOwner) {
       header.style.cursor = 'pointer';
 
       header.onclick = () => {
-        openChannel(serverName, channelName);
-        currentLocation.textContent = `Channel: #${channelName}`;
-      };
+  openChannel(serverName, channelName, isOwner);
+  currentLocation.textContent = `Channel: #${channelName}`;
+};
 
       if (isOwner) {
         const deleteBtn = document.createElement('button');
@@ -564,14 +564,14 @@ async function leaveServer(serverName, userId) {
 
 
 
-async function openChannel(serverName, channelName) {
+async function openChannel(serverName, channelName, isOwner) {
   const fullPath = `servers/${serverName}/channels/${channelName}`;
   currentChatPath = fullPath;
   currentLocation.textContent = `Channel: #${channelName}`;
 
   if (messageRefreshInterval) clearInterval(messageRefreshInterval);
 
-  loadMessages(fullPath,s.owner === currentUser.name,serverName);
+  loadMessages(fullPath, isOwner, serverName);
 }
 
   function applySearch() {
