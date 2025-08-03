@@ -517,7 +517,7 @@ async function loadChannels(serverName, isOwner) {
       chatArea.appendChild(btn);
 
       // 🔄 Load user list automatically for owners
-      loadUserList(serverName);
+      //loadUserList(serverName);
     }
 
   } catch (err) {
@@ -526,39 +526,39 @@ async function loadChannels(serverName, isOwner) {
   }
 }
 
-async function loadUserList(serverName) {
-  const userArea = document.getElementById('user-area');
-  userArea.innerHTML = '<h3>Server Members</h3>'; // Always keep header
-
-  try {
-    const res = await fetch(`${BASE}/servers/${serverName}/users.json`);
-    const users = await res.json() || {};
-
-    Object.entries(users).forEach(([userId, username]) => {
-      const entry = document.createElement('div');
-      entry.textContent = username;
-      entry.style.display = 'flex';
-      entry.style.justifyContent = 'space-between';
-      entry.style.alignItems = 'center';
-
-      const kickBtn = document.createElement('button');
-      kickBtn.textContent = 'Kick';
-      kickBtn.onclick = async () => {
-        await fetch(`${BASE}/servers/${serverName}/users/${userId}.json`, {
-          method: 'DELETE'
-        });
-        loadUserList(serverName); // Refresh list
-      };
-
-      entry.appendChild(kickBtn);
-      userArea.appendChild(entry);
-    });
-
-  } catch (err) {
-    console.error('Error loading users:', err);
-    userArea.innerHTML += '<p>Failed to load members.</p>';
-  }
-}
+//async function loadUserList(serverName) {
+//  const userArea = document.getElementById('user-area');
+//  userArea.innerHTML = '<h3>Server Members</h3>'; // Always keep header
+//
+//  try {
+//    const res = await fetch(`${BASE}/servers/${serverName}/users.json`);
+//    const users = await res.json() || {};
+//
+//    Object.entries(users).forEach(([userId, username]) => {
+//      const entry = document.createElement('div');
+//      entry.textContent = username;
+//      entry.style.display = 'flex';
+//      entry.style.justifyContent = 'space-between';
+//      entry.style.alignItems = 'center';
+//
+//      const kickBtn = document.createElement('button');
+//      kickBtn.textContent = 'Kick';
+//      kickBtn.onclick = async () => {
+//        await fetch(`${BASE}/servers/${serverName}/users/${userId}.json`, {
+//          method: 'DELETE'
+//        });
+//        loadUserList(serverName); // Refresh list
+//      };
+//
+//      entry.appendChild(kickBtn);
+//      userArea.appendChild(entry);
+//    });
+//
+//  } catch (err) {
+//    console.error('Error loading users:', err);
+//    userArea.innerHTML += '<p>Failed to load members.</p>';
+//  }
+//}
 
 async function leaveServer(serverName, userId) {
   await fetch(`${BASE}/servers/${serverName}/users/${userId}.json`, {
@@ -651,7 +651,7 @@ if (chatArea) {
           await fetch(`${BASE}/servers/${serverName}/users/${msg.sender}.json`, {
             method: 'DELETE'
           });
-          loadUserList(serverName);
+          //loadUserList(serverName);
         };
         header.appendChild(kickBtn);
       }
