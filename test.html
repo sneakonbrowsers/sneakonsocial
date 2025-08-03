@@ -284,69 +284,101 @@ checkInviteInURL();
   return code;
 }
 
-async function initVoiceChat(channelName, userId) {
-  if (channelName !== "voice") return;
+async function initVoiceChat(chatPath, userId) {
+  if (!chatPath.includes("/voice")) return;
 
-  const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  const config = { iceServers: [{ urls: "stun:stun1.l.google.com:19302" }] };
   const peerConnections = {};
-  let localStream = null;
+  let localStream;
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    console.log("✅ Microphone access granted");
   } catch (err) {
-    console.error("Voice access denied:", err);
+    console.error("🚫 Microphone permission denied:", err);
     return;
   }
 
-  const signalRef = firebase.database().ref(`voiceRooms/voice/signals`);
+  const signalRef = firebase.database().ref(`${chatPath}/signals`);
   signalRef.push({ type: "join", userId });
 
   signalRef.on("child_added", async snapshot => {
     const signal = snapshot.val();
-    const from = signal.from;
-    if (from === userId) return;
+    if (!signal || signal.from === userId) return;
 
+    console.log("🔔 Signal received:", signal);
+
+    // Handle offer
     if (signal.type === "offer") {
       const pc = new RTCPeerConnection(config);
-      peerConnections[from] = pc;
+      peerConnections[signal.from] = pc;
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-      pc.ontrack = event => attachRemoteAudio(event.streams[0]);
+
+      pc.ontrack = event => {
+        console.log("📡 Remote stream received from", signal.from);
+        attachRemoteAudio(event.streams[0]);
+      };
 
       await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
       signalRef.push({
-        type: "answer", from: userId, to: from, sdp: answer
+        type: "answer", from: userId, to: signal.from, sdp: answer
       });
+
+      console.log("📨 Answer sent to", signal.from);
     }
 
-    if (signal.type === "answer" && peerConnections[signal.to]) {
-      await peerConnections[signal.to].setRemoteDescription(new RTCSessionDescription(signal.sdp));
+    // Handle answer
+    if (signal.type === "answer" && signal.to === userId) {
+      const pc = peerConnections[signal.from];
+      if (!pc) {
+        console.warn("⚠️ No peer connection found for", signal.from);
+        return;
+      }
+
+      await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+      console.log("🧩 Remote description set from", signal.from);
     }
   });
 
-  const newPeer = new RTCPeerConnection(config);
-  peerConnections[userId] = newPeer;
-  localStream.getTracks().forEach(track => newPeer.addTrack(track, localStream));
-  newPeer.ontrack = event => attachRemoteAudio(event.streams[0]);
+  const pc = new RTCPeerConnection(config);
+  peerConnections[userId] = pc;
 
-  const offer = await newPeer.createOffer();
-  await newPeer.setLocalDescription(offer);
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  pc.ontrack = event => {
+    console.log("📡 Remote stream received from self-trigger");
+    attachRemoteAudio(event.streams[0]);
+  };
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
 
   signalRef.push({ type: "offer", from: userId, sdp: offer });
+  console.log("🚀 Offer sent");
 
+  // Show stream as visible audio element for debugging
   function attachRemoteAudio(stream) {
     const audioEl = document.createElement("audio");
     audioEl.srcObject = stream;
     audioEl.autoplay = true;
-    audioEl.style.display = "none"; // Optional: replace with avatar-style UI
+    audioEl.controls = true;
+    audioEl.style.position = "fixed";
+    audioEl.style.bottom = "10px";
+    audioEl.style.left = "10px";
+    audioEl.style.zIndex = "1000";
     document.body.appendChild(audioEl);
+    console.log("🔊 Audio element attached");
   }
 
+  // Mute toggle
   window.toggleMute = () => {
-    localStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+    localStream.getAudioTracks().forEach(track => {
+      track.enabled = !track.enabled;
+      console.log(track.enabled ? "🔈 Mic unmuted" : "🔇 Mic muted");
+    });
   };
 }
 
