@@ -5,14 +5,8 @@
   <title>Sneakon Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Modular Firebase SDK (v10+) -->
-  <script type="module" src="app.js"></script>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -20,7 +14,6 @@
       color: #f1f1f1;
       overflow: hidden;
     }
-
     header {
       display: flex;
       align-items: center;
@@ -29,7 +22,6 @@
       border-bottom: 1px solid #333;
       padding: 10px;
     }
-
     #avatarPreview {
       border-radius: 50%;
       border: 2px solid #444;
@@ -37,16 +29,8 @@
       height: 32px;
       object-fit: cover;
     }
-
-    #displayName {
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-
-    #chatTitle {
-      font-size: 1.1em;
-      margin-left: auto;
-    }
+    #displayName { font-weight: bold; font-size: 1.1em; }
+    #chatTitle { font-size: 1.1em; margin-left: auto; }
 
     #sidebar {
       position: absolute;
@@ -59,7 +43,6 @@
       padding: 10px;
       overflow-y: auto;
     }
-
     #chatArea {
       margin-left: 240px;
       margin-top: 54px;
@@ -69,7 +52,6 @@
       flex-direction: column;
       background: #1a1a1d;
     }
-
     #chatBox {
       flex-grow: 1;
       overflow-y: auto;
@@ -79,7 +61,6 @@
       border-radius: 6px;
       margin-bottom: 10px;
     }
-
     .message {
       display: flex;
       align-items: center;
@@ -89,19 +70,14 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
-    .message:hover {
-      background: #38383d;
-    }
-
+    .message:hover { background: #38383d; }
     .message img {
       border-radius: 50%;
       margin-right: 8px;
+      width: 24px;
+      height: 24px;
     }
-
-    .message strong {
-      margin-right: 6px;
-    }
+    .message strong { margin-right: 6px; }
 
     #typingStatus {
       font-style: italic;
@@ -131,16 +107,9 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #57575f;
-    }
+    button:hover { background: #57575f; }
 
-    h3 {
-      margin-bottom: 8px;
-    }
-
-    #serverList li,
-    #channelList li {
+    #serverList li, #channelList li {
       background: #1f1f22;
       margin-bottom: 6px;
       padding: 6px;
@@ -148,8 +117,7 @@
       cursor: pointer;
     }
 
-    #serverList li:hover,
-    #channelList li:hover {
+    #serverList li:hover, #channelList li:hover {
       background: #2c2c30;
     }
   </style>
@@ -167,7 +135,6 @@
   <div id="sidebar">
     <h3>Servers</h3>
     <ul id="serverList"></ul>
-
     <h3>Channels</h3>
     <ul id="channelList"></ul>
   </div>
@@ -181,5 +148,59 @@
     </div>
   </div>
 
+  <script type="module">
+    // 🧠 Simulated identity (replace with real user logic)
+    const user = {
+      uid: "user_abc123",
+      name: "Sneakonaut",
+      avatar: "https://i.pravatar.cc/100?u=abc123"
+    };
+
+    // ⛓ Wait for DOM
+    window.addEventListener("DOMContentLoaded", () => {
+      // Inject user profile
+      document.getElementById("displayName").textContent = user.name || "guest";
+      document.getElementById("avatarPreview").src = user.avatar || "";
+
+      // Sample server/channel data
+      const servers = ["🪐 ExoNet", "🎮 Arcade Zone", "📖 LoreVerse"];
+      const channels = ["#general", "#lore", "#trade"];
+
+      // Populate lists
+      const serverList = document.getElementById("serverList");
+      servers.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = s;
+        serverList.appendChild(li);
+      });
+
+      const channelList = document.getElementById("channelList");
+      channels.forEach(c => {
+        const li = document.createElement("li");
+        li.textContent = c;
+        channelList.appendChild(li);
+      });
+
+      // Messaging logic
+      const msgInput = document.getElementById("msgInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const chatBox = document.getElementById("chatBox");
+
+      sendBtn.addEventListener("click", () => {
+        const text = msgInput.value.trim();
+        if (!text) return;
+
+        const msgEl = document.createElement("div");
+        msgEl.className = "message";
+        msgEl.innerHTML = `
+          <img src="${user.avatar}" alt="avatar" />
+          <strong>${user.name}</strong> <span>${text}</span>
+        `;
+        chatBox.appendChild(msgEl);
+        msgInput.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    });
+  </script>
 </body>
 </html>
