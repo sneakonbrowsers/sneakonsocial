@@ -588,10 +588,13 @@ async function loadMessages(path, isOwner, serverName) {
   const messageContainer = document.getElementById('chat-area');
   if (!messageContainer) return console.error("Missing #chat-area container");
 
-  messageContainer.innerHTML = '';
+  const chatArea = document.getElementById('chat-area');
+if (chatArea) {
+  const h4s = chatArea.querySelectorAll('h4');
+  h4s.forEach(h4 => h4.remove());
+}
 
   try {
-    // 🧠 Fetch users and messages
     const [userRes, msgRes] = await Promise.all([
       fetch(`${BASE}/users.json`),
       fetch(`${BASE}/${path}/messages.json`)
@@ -600,15 +603,20 @@ async function loadMessages(path, isOwner, serverName) {
     const users = await userRes.json() || {};
     const messages = await msgRes.json() || {};
 
-    // 🧵 Render each message
-    Object.entries(messages).forEach(([_, msg]) => {
+    const existingMessages = new Set(
+      Array.from(messageContainer.children).map(el => el.getAttribute('data-id'))
+    );
+
+    Object.entries(messages).forEach(([id, msg]) => {
+      if (existingMessages.has(id)) return; // Already rendered
+
       const wrapper = document.createElement('div');
       wrapper.className = 'message';
+      wrapper.setAttribute('data-id', id);
       wrapper.style.display = 'flex';
       wrapper.style.alignItems = 'center';
       wrapper.style.marginBottom = '10px';
 
-      // 🎭 Avatar
       const avatar = document.createElement('img');
       avatar.src = users[msg.sender]?.avatar || `https://i.pravatar.cc/40?u=${msg.sender}`;
       avatar.alt = `${msg.sender}'s avatar`;
@@ -617,7 +625,6 @@ async function loadMessages(path, isOwner, serverName) {
       avatar.style.borderRadius = '50%';
       avatar.style.marginRight = '10px';
 
-      // 🧱 Text block
       const textBlock = document.createElement('div');
       textBlock.style.display = 'flex';
       textBlock.style.flexDirection = 'column';
@@ -631,7 +638,6 @@ async function loadMessages(path, isOwner, serverName) {
       username.textContent = msg.sender;
       header.appendChild(username);
 
-      // 🧨 Owner-only Kick option
       if (isOwner && users[msg.sender]) {
         const kickBtn = document.createElement('button');
         kickBtn.textContent = 'Kick';
@@ -650,6 +656,7 @@ async function loadMessages(path, isOwner, serverName) {
 
       textBlock.appendChild(header);
       textBlock.appendChild(text);
+
       wrapper.appendChild(avatar);
       wrapper.appendChild(textBlock);
       messageContainer.appendChild(wrapper);
@@ -657,7 +664,9 @@ async function loadMessages(path, isOwner, serverName) {
 
   } catch (err) {
     console.error("Failed to load messages:", err);
-    messageContainer.innerHTML = '<p>Unable to load messages.</p>';
+    if (!messageContainer.querySelector('.message')) {
+      messageContainer.innerHTML = '<p>Unable to load messages.</p>';
+    }
   }
 }
 
@@ -668,7 +677,7 @@ async function sendMessage() {
 
 const fetchAndRender = async () => {
   if (!currentChatPath) return;
-  await loadMessages(currentChatPath, s.owner === currentUser.name, serverName);
+  await loadMessages(currentChatPath, null, null);
 };
 
   const message = {
