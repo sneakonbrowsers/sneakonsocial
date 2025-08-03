@@ -1,236 +1,238 @@
+<!-- Sneakon Social Full App (Login + Chat + Server System + DMs) -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sneakon Social</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-    aside {
-      width: 240px;
-      background: #2c2f33;
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
-    }
-    aside h2 {
-      margin-top: 0;
-    }
-    #user-profile {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    #user-profile img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 0.75rem;
-    }
-    #user-profile input {
-      flex: 1;
-      margin-bottom: 0.5rem;
-    }
-    nav {
-      flex: 1;
-      overflow-y: auto;
-    }
-    nav h3 {
-      margin: 1rem 0 0.5rem;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    nav li {
-      padding: 0.5rem;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    nav li.active, nav li:hover {
-      background: #40444b;
-    }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #36393f;
-      color: #ddd;
-    }
-    #chat-box {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-    }
-    .message {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-    .message img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      margin-right: 0.5rem;
-    }
-    .message-content {
-      background: #40444b;
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-      max-width: 70%;
-    }
-    #chat-input {
-      display: flex;
-      padding: 0.5rem;
+      font-family: sans-serif;
       background: #2f3136;
-    }
-    #chat-input input {
-      flex: 1;
-      padding: 0.5rem;
-      border: none;
-      border-radius: 4px;
-      margin-right: 0.5rem;
-      background: #40444b;
       color: #eee;
+      height: 100vh;
     }
-    #chat-input button {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      background: #7289da;
-      color: #fff;
-      cursor: pointer;
+    #login-screen, #main-screen {
+      display: none;
+      padding: 2rem;
     }
-    #chat-input button:hover {
-      background: #5b6eae;
+    .visible { display: block; }
+    input, button {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
     }
+    #avatar-preview { width: 60px; height: 60px; border-radius: 50%; }
+    nav ul { list-style: none; padding: 0; }
+    nav li { padding: 0.5rem; cursor: pointer; }
+    nav li.active, nav li:hover { background: #40444b; }
+    #chat-box { height: 300px; overflow-y: auto; margin: 1rem 0; }
+    .message { margin-bottom: 0.5rem; }
+    .message img { width: 24px; height: 24px; border-radius: 50%; margin-right: 0.5rem; }
+    .inline { display: flex; align-items: center; }
   </style>
 </head>
 <body>
-  <aside>
-    <h2>Sneakon Social</h2>
-    <section id="user-profile">
-      <img id="avatar-preview" src="" alt="avatar"/>
-      <div>
-        <input type="text" id="username" placeholder="Your name"/>
-        <input type="file" id="avatar-input" accept="image/*"/>
-      </div>
-    </section>
-    <nav>
-      <h3>Channels</h3>
-      <ul id="channel-list">
-        <li data-path="channels/general"># general</li>
-        <li data-path="channels/random"># random</li>
-      </ul>
-      <h3>Direct Messages</h3>
-      <ul id="dm-list"></ul>
-    </nav>
-  </aside>
+  <div id="login-screen" class="visible">
+    <h1>Login to Sneakon</h1>
+    <input type="text" id="login-username" placeholder="Username" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <input type="file" id="login-avatar" accept="image/*" />
+    <img id="avatar-preview" src="" alt="" />
+    <button onclick="login()">Login / Register</button>
+  </div>
 
-  <main>
+  <div id="main-screen">
+    <h2>Welcome, <span id="user-display"></span></h2>
+    <button onclick="logout()">Logout</button>
+    <nav>
+      <h3>Your Servers</h3>
+      <ul id="server-list"></ul>
+      <input type="text" id="new-server-name" placeholder="New Server Name" />
+      <button onclick="createServer()">Create Server</button>
+
+      <h3>Channels in Selected Server</h3>
+      <ul id="channel-list"></ul>
+      <input type="text" id="new-channel-name" placeholder="New Channel Name" />
+      <button onclick="createChannel()">Add Channel</button>
+
+      <h3>DMs</h3>
+      <ul id="dm-list"></ul>
+      <input type="text" id="dm-user" placeholder="User to DM" />
+      <button onclick="startDM()">Start DM</button>
+    </nav>
+
     <div id="chat-box"></div>
-    <div id="chat-input">
-      <input type="text" id="message-input" placeholder="Type a message"/>
-      <button id="send-btn">Send</button>
-    </div>
-  </main>
+    <input type="text" id="chat-input" placeholder="Type message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
-    // Replace with your Firebase DB URL
-    const BASE_URL = 'https://fidgety-6bac3-default-rtdb.firebaseio.com';
+    const BASE = 'https://fidgety-6bac3-default-rtdb.firebaseio.com';
+    let currentUser = null;
+    let currentChatPath = null;
 
-    let currentPath = 'channels/general';
+    async function login() {
+      const uname = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+      const file = document.getElementById('login-avatar').files[0];
 
-    // Initialize user from localStorage or default
-    const userKey = 'sneakon_user';
-    let currentUser = JSON.parse(localStorage.getItem(userKey)) || {
-      name: 'Anonymous',
-      avatar: `https://i.pravatar.cc/100?u=default`
-    };
+      if (!uname || !pass) return alert('Enter username and password');
 
-    // DOM elements
-    const avatarPreview = document.getElementById('avatar-preview');
-    const avatarInput   = document.getElementById('avatar-input');
-    const usernameInput = document.getElementById('username');
-    const channelList   = document.getElementById('channel-list');
-    const dmList        = document.getElementById('dm-list');
-    const chatBox       = document.getElementById('chat-box');
-    const messageInput  = document.getElementById('message-input');
-    const sendBtn       = document.getElementById('send-btn');
-
-    // Render user profile controls
-    function renderUserProfile() {
-      avatarPreview.src    = currentUser.avatar;
-      usernameInput.value  = currentUser.name;
-      saveUser();
-    }
-
-    // Persist user to localStorage
-    function saveUser() {
-      localStorage.setItem(userKey, JSON.stringify(currentUser));
-    }
-
-    // Handle avatar upload and preview
-    avatarInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        currentUser.avatar = reader.result;
-        renderUserProfile();
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Handle username changes
-    usernameInput.addEventListener('input', e => {
-      currentUser.name = e.target.value || 'Anonymous';
-      saveUser();
-    });
-
-    // Load messages from Firebase for a given path
-    async function loadMessages(path) {
-      currentPath = path;
-      // highlight active channel/DM
-      document.querySelectorAll('nav li').forEach(li => {
-        li.classList.toggle('active', li.dataset.path === path);
-      });
-      chatBox.innerHTML = '';
-      const res = await fetch(`${BASE_URL}/messages/${path}.json`);
-      const data = await res.json() || {};
-      const msgs = Object.values(data).sort((a,b) => a.timestamp - b.timestamp);
-      for (const msg of msgs) {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.innerHTML = `
-          <img src="${msg.avatar}" alt="avatar"/>
-          <div class="message-content">
-            <strong>${msg.author}</strong>: ${msg.content}
-          </div>
-        `;
-        chatBox.appendChild(div);
+      let avatarURL = `https://i.pravatar.cc/100?u=${uname}`;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          avatarURL = reader.result;
+          document.getElementById('avatar-preview').src = avatarURL;
+          await authUser(uname, pass, avatarURL);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        await authUser(uname, pass, avatarURL);
       }
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Send a message to Firebase and reload
+    async function authUser(uname, pass, avatar) {
+      const res = await fetch(`${BASE}/users/${uname}.json`);
+      const userData = await res.json();
+      if (userData && userData.password !== pass) {
+        return alert('Incorrect password');
+      }
+      if (!userData) {
+        await fetch(`${BASE}/users/${uname}.json`, {
+          method: 'PUT',
+          body: JSON.stringify({ password: pass, avatar })
+        });
+      }
+      currentUser = { name: uname, avatar };
+      document.getElementById('login-screen').classList.remove('visible');
+      document.getElementById('main-screen').classList.add('visible');
+      document.getElementById('user-display').textContent = uname;
+      loadServers();
+      loadDMs();
+    }
+
+    function logout() {
+      currentUser = null;
+      location.reload();
+    }
+
+    async function createServer() {
+      const name = document.getElementById('new-server-name').value.trim();
+      if (!name) return;
+      await fetch(`${BASE}/servers/${name}.json`, {
+        method: 'PUT',
+        body: JSON.stringify({ owner: currentUser.name, channels: {} })
+      });
+      loadServers();
+    }
+
+    async function createChannel() {
+      const server = document.querySelector('#server-list li.active')?.textContent;
+      const channel = document.getElementById('new-channel-name').value.trim();
+      if (!server || !channel) return;
+      await fetch(`${BASE}/servers/${server}/channels/${channel}.json`, {
+        method: 'PUT',
+        body: JSON.stringify(true)
+      });
+      loadChannels(server);
+    }
+
+    async function startDM() {
+      const other = document.getElementById('dm-user').value.trim();
+      if (!other) return;
+      const path = `dms/${[currentUser.name, other].sort().join('_')}`;
+      addDMItem(other, path);
+      currentChatPath = path;
+      loadMessages(path);
+    }
+
+    async function loadServers() {
+      const res = await fetch(`${BASE}/servers.json`);
+      const data = await res.json();
+      const list = document.getElementById('server-list');
+      list.innerHTML = '';
+      for (let s in data) {
+        if (data[s].owner === currentUser.name) {
+          const li = document.createElement('li');
+          li.textContent = s;
+          li.onclick = () => {
+            document.querySelectorAll('#server-list li').forEach(el => el.classList.remove('active'));
+            li.classList.add('active');
+            loadChannels(s);
+          };
+          list.appendChild(li);
+        }
+      }
+    }
+
+    async function loadChannels(server) {
+      const res = await fetch(`${BASE}/servers/${server}/channels.json`);
+      const data = await res.json();
+      const list = document.getElementById('channel-list');
+      list.innerHTML = '';
+      for (let c in data) {
+        const li = document.createElement('li');
+        li.textContent = c;
+        li.onclick = () => {
+          document.querySelectorAll('#channel-list li').forEach(el => el.classList.remove('active'));
+          li.classList.add('active');
+          currentChatPath = `channels/${server}/${c}`;
+          loadMessages(currentChatPath);
+        };
+        list.appendChild(li);
+      }
+    }
+
+    async function loadDMs() {
+      const res = await fetch(`${BASE}/users.json`);
+      const data = await res.json();
+      const list = document.getElementById('dm-list');
+      list.innerHTML = '';
+      for (let u in data) {
+        if (u !== currentUser.name) {
+          const path = `dms/${[currentUser.name, u].sort().join('_')}`;
+          addDMItem(u, path);
+        }
+      }
+    }
+
+    function addDMItem(name, path) {
+      const li = document.createElement('li');
+      li.textContent = name;
+      li.onclick = () => {
+        document.querySelectorAll('#dm-list li').forEach(el => el.classList.remove('active'));
+        li.classList.add('active');
+        currentChatPath = path;
+        loadMessages(path);
+      };
+      document.getElementById('dm-list').appendChild(li);
+    }
+
+    async function loadMessages(path) {
+      const res = await fetch(`${BASE}/messages/${path}.json`);
+      const data = await res.json() || {};
+      const box = document.getElementById('chat-box');
+      box.innerHTML = '';
+      for (let key in data) {
+        const m = data[key];
+        const div = document.createElement('div');
+        div.className = 'message inline';
+        div.innerHTML = `
+          <img src="${m.avatar}" />
+          <strong>${m.author}</strong>: ${m.content}
+        `;
+        box.appendChild(div);
+      }
+      box.scrollTop = box.scrollHeight;
+    }
+
     async function sendMessage() {
-      const text = messageInput.value.trim();
-      if (!text) return;
-      await fetch(`${BASE_URL}/messages/${currentPath}.json`, {
+      const text = document.getElementById('chat-input').value.trim();
+      if (!text || !currentChatPath) return;
+      await fetch(`${BASE}/messages/${currentChatPath}.json`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           author: currentUser.name,
           avatar: currentUser.avatar,
@@ -238,46 +240,9 @@
           timestamp: Date.now()
         })
       });
-      messageInput.value = '';
-      loadMessages(currentPath);
+      document.getElementById('chat-input').value = '';
+      loadMessages(currentChatPath);
     }
-
-    // Setup channel and DM click handlers
-    channelList.addEventListener('click', e => {
-      if (e.target.tagName === 'LI') {
-        loadMessages(e.target.dataset.path);
-      }
-    });
-
-    dmList.addEventListener('click', e => {
-      if (e.target.tagName === 'LI') {
-        loadMessages(e.target.dataset.path);
-      }
-    });
-
-    // Create a new DM (for demo purposes)
-    function addDM(username) {
-      const path = `dms/${username}`;
-      const li = document.createElement('li');
-      li.dataset.path = path;
-      li.textContent = username;
-      dmList.appendChild(li);
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', e => {
-      if (e.key === 'Enter') sendMessage();
-    });
-
-    // Initial render
-    renderUserProfile();
-    loadMessages(currentPath);
-
-    // Note: python -m http.server serves assets as text/plain and can break module/asset loading.
-    // For correct MIME-types, consider using:
-    //   npx http-server
-    //   npx live-server
-    //   Firebase Hosting
   </script>
 </body>
 </html>
