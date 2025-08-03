@@ -7,7 +7,15 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
   const username = document.getElementById("username").value.trim();
   const caption = document.getElementById("caption").value.trim();
   const file = document.getElementById("mediaUpload").files[0];
-  if (!username || !caption || !file) return alert("Please fill out all fields.");
+
+  // 🚫 Block ✅ from username or caption
+  if (username.includes("✅") || caption.includes("✅")) {
+    return alert("Please do not include ✅ in your username or caption.");
+  }
+
+  if (!username || !caption || !file) {
+    return alert("Please fill out all fields.");
+  }
 
   const reader = new FileReader();
   reader.onloadend = async () => {
@@ -22,7 +30,7 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       timestamp: Date.now()
     };
 
-    await fetch(DB_URL, {
+    await fetch("https://your-project.firebaseio.com/posts.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(post)
@@ -30,6 +38,7 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
 
     loadPosts();
   };
+
   reader.readAsDataURL(file);
 });
 
