@@ -7,132 +7,29 @@
 
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0d0d0f;
-      color: #f1f1f1;
+      margin: 0; font-family: 'Segoe UI'; background: #0d0d0f; color: #f1f1f1;
     }
-    header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #1c1c1f;
-      padding: 10px;
-      border-bottom: 1px solid #333;
-    }
-    #avatarPreview {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #444;
-    }
+    header { display: flex; align-items: center; gap: 10px; background: #1c1c1f; padding: 10px; border-bottom: 1px solid #333; }
+    #avatarPreview { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #444; }
     #displayName { font-weight: bold; font-size: 1.1em; }
     #chatTitle { margin-left: auto; font-size: 1.1em; }
-
-    #loginContainer {
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
+    #loginContainer, #sidebar, #chatArea { padding: 20px; }
+    input, button {
+      padding: 8px; margin-bottom: 10px; border: 1px solid #444;
+      border-radius: 6px; background: #252528; color: #f1f1f1;
     }
-    #loginContainer input {
-      margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: #252528;
-      color: #f1f1f1;
-    }
-    #loginContainer button {
-      padding: 8px 12px;
-      background: #393943;
-      border: none;
-      border-radius: 6px;
-      color: #f1f1f1;
-      cursor: pointer;
-    }
-    #sidebar {
-      position: absolute;
-      top: 54px;
-      left: 0;
-      width: 240px;
-      height: calc(100vh - 54px);
-      background: #141417;
-      padding: 10px;
-      border-right: 1px solid #333;
-      overflow-y: auto;
-    }
-    #chatArea {
-      margin-left: 240px;
-      margin-top: 54px;
-      padding: 10px;
-      height: calc(100vh - 54px);
-      display: flex;
-      flex-direction: column;
-      background: #1a1a1d;
-    }
-    #chatBox {
-      flex-grow: 1;
-      overflow-y: auto;
-      background: #111;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      margin-bottom: 10px;
-    }
-    .message {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 10px;
-      background: #2a2a2f;
-      padding: 6px;
-      border-radius: 6px;
-    }
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 8px;
-      background: #252528;
-      border: 1px solid #444;
-      border-radius: 6px;
-      color: #f1f1f1;
-    }
+    button { background: #393943; cursor: pointer; }
     button:hover { background: #57575f; }
-    button {
-      padding: 8px 12px;
-      margin-left: 6px;
-      background: #393943;
-      color: #f1f1f1;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    li {
-      background: #1f1f22;
-      padding: 6px;
-      border-radius: 4px;
-      margin-bottom: 6px;
-      cursor: pointer;
-    }
+    #sidebar { position: absolute; top: 54px; left: 0; width: 240px; height: calc(100vh - 54px); background: #141417; border-right: 1px solid #333; overflow-y: auto; }
+    #chatArea { margin-left: 240px; margin-top: 54px; height: calc(100vh - 54px); display: flex; flex-direction: column; background: #1a1a1d; }
+    #chatBox { flex-grow: 1; background: #111; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-bottom: 10px; overflow-y: auto; }
+    .message { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; background: #2a2a2f; padding: 6px; border-radius: 6px; }
+    li { background: #1f1f22; padding: 6px; border-radius: 4px; margin-bottom: 6px; cursor: pointer; }
     li:hover { background: #2c2c30; }
   </style>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const BASE_URL = "https://fidgety-6bac3-default-rtdb.firebaseio.com";
 
     window.addEventListener("DOMContentLoaded", () => {
       const loginContainer = document.getElementById("loginContainer");
@@ -143,63 +40,67 @@
       const passwordInput = document.getElementById("password");
       const loginBtn = document.getElementById("loginBtn");
 
-      loginBtn.addEventListener("click", () => {
+      loginBtn.addEventListener("click", async () => {
         const uname = usernameInput.value.trim();
         const pass = passwordInput.value.trim();
 
-        const userRef = ref(db, `users/${uname}`);
-        onValue(userRef, snapshot => {
-          const userData = snapshot.val();
+        try {
+          const res = await fetch(`${BASE_URL}/users/${uname}.json`);
+          const userData = await res.json();
+
           if (!userData) return alert("User not found");
+          if (userData.password !== pass) return alert("Incorrect password");
 
-          if (userData.password === pass) {
-            loginContainer.style.display = "none";
-            sidebar.style.display = "block";
-            chatArea.style.display = "flex";
+          loginContainer.style.display = "none";
+          sidebar.style.display = "block";
+          chatArea.style.display = "flex";
 
-            document.getElementById("displayName").textContent = userData.name || uname;
-            document.getElementById("avatarPreview").src = userData.avatar || "";
+          document.getElementById("displayName").textContent = userData.name || uname;
+          document.getElementById("avatarPreview").src = userData.avatar || "";
 
-            loadServers(userData.uid || uname);
-          } else {
-            alert("Incorrect password");
-          }
-        }, { onlyOnce: true });
+          loadServers();
+        } catch (err) {
+          console.error("Login error:", err);
+          alert("Error connecting to Firebase");
+        }
       });
 
-      function loadServers(userId) {
-        const serverList = document.getElementById("serverList");
-        const channelList = document.getElementById("channelList");
+      async function loadServers() {
+        try {
+          const res = await fetch(`${BASE_URL}/servers.json`);
+          const serversData = await res.json();
+          const serverList = document.getElementById("serverList");
+          const channelList = document.getElementById("channelList");
 
-        onValue(ref(db, 'servers'), snapshot => {
           serverList.innerHTML = '';
           channelList.innerHTML = '';
 
-          snapshot.forEach(serverSnap => {
-            const serverId = serverSnap.key;
-            const serverData = serverSnap.val();
-            const name = serverData?.members?.name || serverData?.name || serverId;
-
+          Object.entries(serversData || {}).forEach(([id, server]) => {
+            const displayName = server?.members?.name || server?.name || id;
             const li = document.createElement("li");
-            li.textContent = name;
+            li.textContent = displayName;
 
-            li.addEventListener("click", () => {
+            li.addEventListener("click", async () => {
               channelList.innerHTML = '';
-              const channelRef = ref(db, `servers/${serverId}/channels`);
-              onValue(channelRef, channelSnap => {
-                channelList.innerHTML = '';
-                channelSnap.forEach(ch => {
-                  const chName = ch.val()?.name || ch.key;
+              try {
+                const channelRes = await fetch(`${BASE_URL}/servers/${id}/channels.json`);
+                const channels = await channelRes.json();
+
+                Object.entries(channels || {}).forEach(([cid, channel]) => {
                   const channelLi = document.createElement("li");
-                  channelLi.textContent = chName;
+                  channelLi.textContent = channel?.name || cid;
                   channelList.appendChild(channelLi);
                 });
-              });
+              } catch (err) {
+                console.error("Channel fetch error:", err);
+              }
             });
 
             serverList.appendChild(li);
           });
-        });
+        } catch (err) {
+          console.error("Server fetch error:", err);
+        }
       }
 
       const sendBtn = document.getElementById("sendBtn");
@@ -223,6 +124,7 @@
     });
   </script>
 </head>
+
 <body>
   <header>
     <img id="avatarPreview" src="" alt="Avatar" />
@@ -245,7 +147,7 @@
 
   <div id="chatArea" style="display:none;">
     <div id="chatBox"></div>
-    <div style="display: flex;">
+    <div style="display:flex;">
       <input type="text" id="msgInput" placeholder="Speak your mind..." />
       <button id="sendBtn">Send</button>
     </div>
