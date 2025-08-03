@@ -2,274 +2,282 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sneakon Social</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { margin:0; font-family:sans-serif; background:#111; color:#eee; }
-    header {
-      display:flex; align-items:center; gap:10px;
-      background:#1c1c1f; padding:10px; border-bottom:1px solid #333;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
-    #avatarPreview {
-      width:40px; height:40px; border-radius:50%; border:2px solid #555;
-      object-fit:cover;
+    aside {
+      width: 240px;
+      background: #2c2f33;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
     }
-    #displayName { font-weight:bold; font-size:1.1em; }
-    #chatTitle { margin-left:auto; font-size:1.1em; }
-
-    input, button {
-      padding:8px; margin-bottom:10px;
-      border:1px solid #444; border-radius:6px;
-      background:#252528; color:#f1f1f1;
-      width:100%;
+    aside h2 {
+      margin-top: 0;
     }
-    button:hover { background:#57575f; }
-    #loginContainer, #serverCreate, #channelCreate {
-      padding:20px;
-      background:#1a1a1d;
-      border-bottom:1px solid #333;
+    #user-profile {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
     }
-    #sidebar {
-      position:absolute; top:70px; left:0;
-      width:240px; height:calc(100vh - 70px);
-      background:#141417;
-      border-right:1px solid #333;
-      overflow-y:auto;
+    #user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 0.75rem;
     }
-    #chatArea {
-      margin-left:240px; margin-top:70px;
-      height:calc(100vh - 70px); display:flex;
-      flex-direction:column; background:#1a1a1d;
+    #user-profile input {
+      flex: 1;
+      margin-bottom: 0.5rem;
     }
-    #chatBox {
-      flex-grow:1;
-      background:#111; padding:10px;
-      margin-bottom:10px; overflow-y:auto;
-      border:1px solid #333; border-radius:6px;
+    nav {
+      flex: 1;
+      overflow-y: auto;
+    }
+    nav h3 {
+      margin: 1rem 0 0.5rem;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    nav li {
+      padding: 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    nav li.active, nav li:hover {
+      background: #40444b;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #36393f;
+      color: #ddd;
+    }
+    #chat-box {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
     }
     .message {
-      display:flex; gap:6px; align-items:center;
-      background:#2a2a2f; padding:6px;
-      border-radius:6px; margin-bottom:10px;
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
     }
-    li {
-      background:#1f1f22; margin-bottom:6px; padding:6px;
-      border-radius:4px; cursor:pointer;
+    .message img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
     }
-    li:hover { background:#2c2c30; }
-
-    @media(max-width:700px) {
-      #sidebar { position:static; width:auto; height:auto; }
-      #chatArea { margin-left:0; margin-top:0; }
+    .message-content {
+      background: #40444b;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      max-width: 70%;
+    }
+    #chat-input {
+      display: flex;
+      padding: 0.5rem;
+      background: #2f3136;
+    }
+    #chat-input input {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      background: #40444b;
+      color: #eee;
+    }
+    #chat-input button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #7289da;
+      color: #fff;
+      cursor: pointer;
+    }
+    #chat-input button:hover {
+      background: #5b6eae;
     }
   </style>
 </head>
 <body>
-  <header>
-    <img id="avatarPreview" src="" alt="Avatar" />
-    <span id="displayName"></span>
-    <span id="chatTitle">Sneakon</span>
-  </header>
+  <aside>
+    <h2>Sneakon Social</h2>
+    <section id="user-profile">
+      <img id="avatar-preview" src="" alt="avatar"/>
+      <div>
+        <input type="text" id="username" placeholder="Your name"/>
+        <input type="file" id="avatar-input" accept="image/*"/>
+      </div>
+    </section>
+    <nav>
+      <h3>Channels</h3>
+      <ul id="channel-list">
+        <li data-path="channels/general"># general</li>
+        <li data-path="channels/random"># random</li>
+      </ul>
+      <h3>Direct Messages</h3>
+      <ul id="dm-list"></ul>
+    </nav>
+  </aside>
 
-  <div id="loginContainer">
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <label for="avatarInput">Upload Avatar</label>
-    <input type="file" id="avatarInput" accept="image/*" />
-    <button id="loginBtn">Login / Create Account</button>
-  </div>
-
-  <div id="serverCreate" style="display:none;">
-    <input type="text" id="newServerName" placeholder="New Server Name" />
-    <button id="createServerBtn">Create Server</button>
-  </div>
-
-  <div id="channelCreate" style="display:none;">
-    <input type="text" id="newChannelName" placeholder="New Channel Name" />
-    <button id="createChannelBtn">Create Channel</button>
-  </div>
-
-  <div id="sidebar" style="display:none;">
-    <h3>Servers</h3>
-    <ul id="serverList"></ul>
-    <h3>Channels</h3>
-    <ul id="channelList"></ul>
-    <h3>DMs</h3>
-    <ul id="dmList"></ul>
-  </div>
-
-  <div id="chatArea" style="display:none;">
-    <div id="chatBox"></div>
-    <div style="display:flex; padding:10px;">
-      <input type="text" id="msgInput" placeholder="Speak your mind..." />
-      <button id="sendBtn">Send</button>
+  <main>
+    <div id="chat-box"></div>
+    <div id="chat-input">
+      <input type="text" id="message-input" placeholder="Type a message"/>
+      <button id="send-btn">Send</button>
     </div>
-  </div>
+  </main>
 
-  <script type="module">
-    const BASE_URL = "https://YOUR_PROJECT_ID.firebaseio.com";
-    let tempAvatarDataURL = '';
-    let currentUser = null;
-    let activeServerID = null;
-    let currentMode = null;
+  <script>
+    // Replace with your Firebase DB URL
+    const BASE_URL = 'https://YOUR_FIREBASE_PROJECT.firebaseio.com';
 
-    avatarInput.addEventListener("change", e => {
+    let currentPath = 'channels/general';
+
+    // Initialize user from localStorage or default
+    const userKey = 'sneakon_user';
+    let currentUser = JSON.parse(localStorage.getItem(userKey)) || {
+      name: 'Anonymous',
+      avatar: `https://i.pravatar.cc/100?u=default`
+    };
+
+    // DOM elements
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarInput   = document.getElementById('avatar-input');
+    const usernameInput = document.getElementById('username');
+    const channelList   = document.getElementById('channel-list');
+    const dmList        = document.getElementById('dm-list');
+    const chatBox       = document.getElementById('chat-box');
+    const messageInput  = document.getElementById('message-input');
+    const sendBtn       = document.getElementById('send-btn');
+
+    // Render user profile controls
+    function renderUserProfile() {
+      avatarPreview.src    = currentUser.avatar;
+      usernameInput.value  = currentUser.name;
+      saveUser();
+    }
+
+    // Persist user to localStorage
+    function saveUser() {
+      localStorage.setItem(userKey, JSON.stringify(currentUser));
+    }
+
+    // Handle avatar upload and preview
+    avatarInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        tempAvatarDataURL = reader.result;
-        avatarPreview.src = tempAvatarDataURL;
+        currentUser.avatar = reader.result;
+        renderUserProfile();
       };
       reader.readAsDataURL(file);
     });
 
-    loginBtn.addEventListener("click", async () => {
-      const uname = username.value.trim();
-      const pass = password.value.trim();
-      if (!uname || !pass) return alert("Enter both fields");
+    // Handle username changes
+    usernameInput.addEventListener('input', e => {
+      currentUser.name = e.target.value || 'Anonymous';
+      saveUser();
+    });
 
-      const res = await fetch(`${BASE_URL}/users/${uname}.json`);
-      const userData = await res.json();
+    // Load messages from Firebase for a given path
+    async function loadMessages(path) {
+      currentPath = path;
+      // highlight active channel/DM
+      document.querySelectorAll('nav li').forEach(li => {
+        li.classList.toggle('active', li.dataset.path === path);
+      });
+      chatBox.innerHTML = '';
+      const res = await fetch(`${BASE_URL}/messages/${path}.json`);
+      const data = await res.json() || {};
+      const msgs = Object.values(data).sort((a,b) => a.timestamp - b.timestamp);
+      for (const msg of msgs) {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `
+          <img src="${msg.avatar}" alt="avatar"/>
+          <div class="message-content">
+            <strong>${msg.author}</strong>: ${msg.content}
+          </div>
+        `;
+        chatBox.appendChild(div);
+      }
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-      if (userData) {
-        if (userData.password !== pass) return alert("Wrong password");
-        activateUser(userData);
-      } else {
-        const newUser = {
-          name: uname,
-          password: pass,
-          avatar: tempAvatarDataURL || `https://i.pravatar.cc/100?u=${uname}`,
-          uid: uname
-        };
-        await fetch(`${BASE_URL}/users/${uname}.json`, {
-          method: "PUT",
-          body: JSON.stringify(newUser)
-        });
-        activateUser(newUser);
+    // Send a message to Firebase and reload
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      await fetch(`${BASE_URL}/messages/${currentPath}.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          author: currentUser.name,
+          avatar: currentUser.avatar,
+          content: text,
+          timestamp: Date.now()
+        })
+      });
+      messageInput.value = '';
+      loadMessages(currentPath);
+    }
+
+    // Setup channel and DM click handlers
+    channelList.addEventListener('click', e => {
+      if (e.target.tagName === 'LI') {
+        loadMessages(e.target.dataset.path);
       }
     });
 
-    function activateUser(user) {
-      currentUser = user;
-      avatarPreview.src = user.avatar;
-      displayName.textContent = user.name;
-      loginContainer.style.display = "none";
-      sidebar.style.display = "block";
-      chatArea.style.display = "flex";
-      serverCreate.style.display = "block";
-      loadServers();
-      loadDMs();
-    }
-
-    async function loadServers() {
-      const res = await fetch(`${BASE_URL}/servers.json`);
-      const servers = await res.json();
-      serverList.innerHTML = '';
-      channelList.innerHTML = '';
-      Object.entries(servers || {}).forEach(([id, server]) => {
-        const name = server?.members?.name || server?.name || id;
-        const li = document.createElement("li");
-        li.textContent = name;
-        li.addEventListener("click", () => {
-          activeServerID = id;
-          loadChannels(id);
-          channelCreate.style.display = server.owner === currentUser.uid ? "block" : "none";
-        });
-        serverList.appendChild(li);
-      });
-    }
-
-    async function loadChannels(serverID) {
-      currentMode = "channel";
-      chatBox.innerHTML = '';
-      const res = await fetch(`${BASE_URL}/servers/${serverID}/channels.json`);
-      const channels = await res.json();
-      channelList.innerHTML = '';
-      Object.entries(channels || {}).forEach(([cid, ch]) => {
-        const li = document.createElement("li");
-        li.textContent = ch.name || cid;
-        li.addEventListener("click", () => {
-          currentMode = "channel";
-          chatTitle.textContent = ch.name;
-          chatBox.innerHTML = '';
-        });
-        channelList.appendChild(li);
-      });
-    }
-
-    createServerBtn.addEventListener("click", async () => {
-      const name = newServerName.value.trim();
-      if (!name) return;
-      const newServer = {
-        name,
-        owner: currentUser.uid,
-        members: { name }
-      };
-      await fetch(`${BASE_URL}/servers.json`, {
-        method: "POST",
-        body: JSON.stringify(newServer)
-      });
-      newServerName.value = '';
-      loadServers();
+    dmList.addEventListener('click', e => {
+      if (e.target.tagName === 'LI') {
+        loadMessages(e.target.dataset.path);
+      }
     });
 
-    createChannelBtn.addEventListener("click", async () => {
-      const name = newChannelName.value.trim();
-      if (!name || !activeServerID) return;
-      const newChannel = {
-        name,
-        createdBy: currentUser.uid,
-        timestamp: Date.now()
-      };
-      await fetch(`${BASE_URL}/servers/${activeServerID}/channels.json`, {
-        method: "POST",
-        body: JSON.stringify(newChannel)
-      });
-      newChannelName.value = '';
-      loadChannels(activeServerID);
-    });
-
-    async function loadDMs() {
-      const res = await fetch(`${BASE_URL}/users.json`);
-      const users = await res.json();
-      dmList.innerHTML = '';
-      Object.entries(users || {}).forEach(([uid, user]) => {
-        if (uid === currentUser.uid) return;
-        const li = document.createElement("li");
-        li.textContent = user.name || uid;
-        li.addEventListener("click", () => {
-          currentMode = "dm";
-          chatBox.innerHTML = '';
-          chatTitle.textContent = `DM: ${user.name}`;
-
-          // Simulated message fetch (replace with actual DM threads later)
-          const msgEl = document.createElement("div");
-          msgEl.className = "message";
-          msgEl.innerHTML = `
-            <img src="${user.avatar || 'https://i.pravatar.cc/100?u=' + uid}" width="24" height="24" style="border-radius:50%;" />
-            <strong>${user.name}</strong> <span>Hi ${currentUser.name}, nice to meet you!</span>
-          `;
-          chatBox.appendChild(msgEl);
-        });
-        dmList.appendChild(li);
-      });
+    // Create a new DM (for demo purposes)
+    function addDM(username) {
+      const path = `dms/${username}`;
+      const li = document.createElement('li');
+      li.dataset.path = path;
+      li.textContent = username;
+      dmList.appendChild(li);
     }
 
-    sendBtn.addEventListener("click", () => {
-      const text = msgInput.value.trim();
-      if (!text) return;
-
-      const msgEl = document.createElement("div");
-      msgEl.className = "message";
-      msgEl.innerHTML = `
-        <img src="${avatarPreview.src}" width="24" height="24" style="border-radius:50%;" />
-        <strong>${displayName.textContent}</strong> <span>${text}</span>
-      `;
-      chatBox.appendChild(msgEl);
-      msgInput.value = '';
-      chatBox.scrollTop = chatBox.scrollHeight;
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') sendMessage();
     });
+
+    // Initial render
+    renderUserProfile();
+    loadMessages(currentPath);
+
+    // Note: python -m http.server serves assets as text/plain and can break module/asset loading.
+    // For correct MIME-types, consider using:
+    //   npx http-server
+    //   npx live-server
+    //   Firebase Hosting
   </script>
 </body>
 </html>
