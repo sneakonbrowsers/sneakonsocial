@@ -376,7 +376,7 @@ async function openDM() {
     }
   }
 
-async function loadChannels(serverName) {
+async function loadChannels(serverName, isOwner) {
   const chatArea = document.getElementById('chat-area');
   chatArea.innerHTML = ''; // Clear previous content
 
@@ -392,7 +392,6 @@ async function loadChannels(serverName) {
       header.setAttribute('data-label', channelName.toLowerCase());
       header.style.display = 'block';
 
-      // 🧭 Pass server name for correct message scoping
       header.onclick = () => {
         openChannel(serverName, channelName);
         currentLocation.textContent = `Channel: #${channelName}`;
@@ -400,6 +399,33 @@ async function loadChannels(serverName) {
 
       chatArea.appendChild(header);
     });
+
+    // 🔐 Owner-only channel creation
+    if (isOwner) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'New channel name';
+      input.id = 'new-channel-input';
+      input.style.marginTop = '12px';
+      input.style.display = 'block';
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Create Channel';
+      btn.onclick = async () => {
+        const newChannel = input.value.trim();
+        if (!newChannel) return;
+
+        await fetch(`${BASE}/servers/${serverName}/channels/${newChannel}.json`, {
+          method: 'PUT',
+          body: JSON.stringify(true)
+        });
+
+        loadChannels(serverName, true); // Refresh with ownership flag
+      };
+
+      chatArea.appendChild(input);
+      chatArea.appendChild(btn);
+    }
 
   } catch (err) {
     console.error('Error loading channels:', err);
