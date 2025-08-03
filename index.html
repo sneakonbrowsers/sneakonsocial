@@ -431,7 +431,7 @@ async function loadChannels(serverName, isOwner) {
     console.error('Error loading channels:', err);
     chatArea.innerHTML = '<p>Failed to load channels.</p>';
   }
-}
+} 
 
 async function openChannel(serverName, channelName) {
   const fullPath = `servers/${serverName}/channels/${channelName}`;
