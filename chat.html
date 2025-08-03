@@ -4,153 +4,71 @@
   <meta charset="UTF-8" />
   <title>Sneakon Social</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <style>
-    body {
-      margin: 0; font-family: 'Segoe UI'; background: #0d0d0f; color: #f1f1f1;
+    body { margin:0; font-family:sans-serif; background:#111; color:#eee; }
+    header, #sidebar, #chatArea { padding:10px; }
+    header {
+      display:flex; align-items:center; gap:10px;
+      background:#1c1c1f; border-bottom:1px solid #333;
     }
-    header { display: flex; align-items: center; gap: 10px; background: #1c1c1f; padding: 10px; border-bottom: 1px solid #333; }
-    #avatarPreview { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #444; }
-    #displayName { font-weight: bold; font-size: 1.1em; }
-    #chatTitle { margin-left: auto; font-size: 1.1em; }
-    #loginContainer, #sidebar, #chatArea { padding: 20px; }
-    input, button {
-      padding: 8px; margin-bottom: 10px; border: 1px solid #444;
-      border-radius: 6px; background: #252528; color: #f1f1f1;
+    #avatarPreview {
+      width:32px; height:32px; border-radius:50%; border:2px solid #444;
+      object-fit:cover;
     }
-    button { background: #393943; cursor: pointer; }
-    button:hover { background: #57575f; }
-    #sidebar { position: absolute; top: 54px; left: 0; width: 240px; height: calc(100vh - 54px); background: #141417; border-right: 1px solid #333; overflow-y: auto; }
-    #chatArea { margin-left: 240px; margin-top: 54px; height: calc(100vh - 54px); display: flex; flex-direction: column; background: #1a1a1d; }
-    #chatBox { flex-grow: 1; background: #111; padding: 10px; border-radius: 6px; border: 1px solid #333; margin-bottom: 10px; overflow-y: auto; }
-    .message { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; background: #2a2a2f; padding: 6px; border-radius: 6px; }
-    li { background: #1f1f22; padding: 6px; border-radius: 4px; margin-bottom: 6px; cursor: pointer; }
-    li:hover { background: #2c2c30; }
+    #displayName { font-weight:bold; font-size:1.1em; }
+    #chatTitle { margin-left:auto; font-size:1.1em; }
+
+    #loginContainer input, button, #avatarInput {
+      padding:8px; margin-bottom:10px;
+      border:1px solid #444; border-radius:6px;
+      background:#252528; color:#f1f1f1;
+      display:block;
+      width:100%;
+    }
+    button { background:#393943; cursor:pointer; }
+    button:hover { background:#57575f; }
+
+    #loginContainer, #serverCreate, #channelCreate {
+      padding:20px;
+      background:#1a1a1d;
+      border-bottom:1px solid #333;
+    }
+
+    #sidebar {
+      position:absolute; top:70px; left:0;
+      width:240px; height:calc(100vh - 70px);
+      background:#141417;
+      border-right:1px solid #333;
+      overflow-y:auto;
+    }
+    #chatArea {
+      margin-left:240px; margin-top:70px;
+      height:calc(100vh - 70px); display:flex;
+      flex-direction:column; background:#1a1a1d;
+    }
+    #chatBox {
+      flex-grow:1;
+      background:#111; padding:10px;
+      margin-bottom:10px; overflow-y:auto;
+      border:1px solid #333; border-radius:6px;
+    }
+    .message {
+      display:flex; gap:6px; align-items:center;
+      background:#2a2a2f; padding:6px;
+      border-radius:6px; margin-bottom:10px;
+    }
+    li {
+      background:#1f1f22; margin-bottom:6px; padding:6px;
+      border-radius:4px; cursor:pointer;
+    }
+    li:hover { background:#2c2c30; }
+
+    @media(max-width:700px) {
+      #sidebar { position:static; width:auto; height:auto; }
+      #chatArea { margin-left:0; margin-top:0; }
+    }
   </style>
-
-  <script type="module">
-    const BASE_URL = "https://fidgety-6bac3-default-rtdb.firebaseio.com";
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const loginContainer = document.getElementById("loginContainer");
-      const sidebar = document.getElementById("sidebar");
-      const chatArea = document.getElementById("chatArea");
-
-      const usernameInput = document.getElementById("username");
-      const passwordInput = document.getElementById("password");
-      const loginBtn = document.getElementById("loginBtn");
-
-      loginBtn.addEventListener("click", async () => {
-  const uname = usernameInput.value.trim();
-  const pass = passwordInput.value.trim();
-
-  if (!uname || !pass) return alert("Please enter both username and password");
-
-  try {
-    const res = await fetch(`${BASE_URL}/users/${uname}.json`);
-    const userData = await res.json();
-
-    // 🟢 User exists: check password
-    if (userData) {
-      if (userData.password !== pass) return alert("Incorrect password");
-
-      activateUser(userData.name || uname, userData.avatar || "", uname);
-    } else {
-      // 🆕 Create new user
-      const newUser = {
-        name: uname,
-        password: pass,
-        avatar: `https://i.pravatar.cc/100?u=${uname}`, // 🎭 Default avatar
-        uid: uname
-      };
-
-      const createRes = await fetch(`${BASE_URL}/users/${uname}.json`, {
-        method: "PUT",
-        body: JSON.stringify(newUser)
-      });
-
-      if (createRes.ok) {
-        activateUser(newUser.name, newUser.avatar, uname);
-      } else {
-        alert("Failed to create user");
-      }
-    }
-  } catch (err) {
-    console.error("Login error:", err);
-    alert("Login failed");
-  }
-});
-
-// 🎮 User UI activation
-function activateUser(name, avatar, uid) {
-  loginContainer.style.display = "none";
-  sidebar.style.display = "block";
-  chatArea.style.display = "flex";
-  document.getElementById("displayName").textContent = name;
-  document.getElementById("avatarPreview").src = avatar;
-  loadServers(uid);
-}
-
-      async function loadServers() {
-        try {
-          const res = await fetch(`${BASE_URL}/servers.json`);
-          const serversData = await res.json();
-          const serverList = document.getElementById("serverList");
-          const channelList = document.getElementById("channelList");
-
-          serverList.innerHTML = '';
-          channelList.innerHTML = '';
-
-          Object.entries(serversData || {}).forEach(([id, server]) => {
-            const displayName = server?.members?.name || server?.name || id;
-            const li = document.createElement("li");
-            li.textContent = displayName;
-
-            li.addEventListener("click", async () => {
-              channelList.innerHTML = '';
-              try {
-                const channelRes = await fetch(`${BASE_URL}/servers/${id}/channels.json`);
-                const channels = await channelRes.json();
-
-                Object.entries(channels || {}).forEach(([cid, channel]) => {
-                  const channelLi = document.createElement("li");
-                  channelLi.textContent = channel?.name || cid;
-                  channelList.appendChild(channelLi);
-                });
-              } catch (err) {
-                console.error("Channel fetch error:", err);
-              }
-            });
-
-            serverList.appendChild(li);
-          });
-        } catch (err) {
-          console.error("Server fetch error:", err);
-        }
-      }
-
-      const sendBtn = document.getElementById("sendBtn");
-      const msgInput = document.getElementById("msgInput");
-      const chatBox = document.getElementById("chatBox");
-
-      sendBtn.addEventListener("click", () => {
-        const text = msgInput.value.trim();
-        if (!text) return;
-
-        const msgEl = document.createElement("div");
-        msgEl.className = "message";
-        msgEl.innerHTML = `
-          <img src="${avatarPreview.src}" width="24" height="24" style="border-radius:50%;" />
-          <strong>${displayName.textContent}</strong> <span>${text}</span>
-        `;
-        chatBox.appendChild(msgEl);
-        msgInput.value = '';
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-    });
-  </script>
 </head>
-
 <body>
   <header>
     <img id="avatarPreview" src="" alt="Avatar" />
@@ -161,7 +79,19 @@ function activateUser(name, avatar, uid) {
   <div id="loginContainer">
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Password" />
-    <button id="loginBtn">Login</button>
+    <label for="avatarInput">Upload Avatar</label>
+    <input type="file" id="avatarInput" accept="image/*" />
+    <button id="loginBtn">Login / Create Account</button>
+  </div>
+
+  <div id="serverCreate" style="display:none;">
+    <input type="text" id="newServerName" placeholder="New Server Name" />
+    <button id="createServerBtn">Create Server</button>
+  </div>
+
+  <div id="channelCreate" style="display:none;">
+    <input type="text" id="newChannelName" placeholder="New Channel Name" />
+    <button id="createChannelBtn">Create Channel</button>
   </div>
 
   <div id="sidebar" style="display:none;">
@@ -169,6 +99,8 @@ function activateUser(name, avatar, uid) {
     <ul id="serverList"></ul>
     <h3>Channels</h3>
     <ul id="channelList"></ul>
+    <h3>DMs</h3>
+    <ul id="dmList"></ul>
   </div>
 
   <div id="chatArea" style="display:none;">
@@ -178,5 +110,165 @@ function activateUser(name, avatar, uid) {
       <button id="sendBtn">Send</button>
     </div>
   </div>
+
+  <script type="module">
+    const BASE_URL = "https://YOUR_PROJECT_ID.firebaseio.com";
+
+    let tempAvatarDataURL = '';
+    let currentUser = null;
+    let activeServerID = null;
+
+    avatarInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        tempAvatarDataURL = reader.result;
+        avatarPreview.src = tempAvatarDataURL;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    loginBtn.addEventListener("click", async () => {
+      const uname = username.value.trim();
+      const pass = password.value.trim();
+      if (!uname || !pass) return alert("Enter both fields");
+
+      try {
+        const res = await fetch(`${BASE_URL}/users/${uname}.json`);
+        const userData = await res.json();
+
+        if (userData) {
+          if (userData.password !== pass) return alert("Wrong password");
+          activateUser(userData, uname);
+        } else {
+          const newUser = {
+            name: uname,
+            password: pass,
+            avatar: tempAvatarDataURL || `https://i.pravatar.cc/100?u=${uname}`,
+            uid: uname
+          };
+          await fetch(`${BASE_URL}/users/${uname}.json`, {
+            method: "PUT",
+            body: JSON.stringify(newUser)
+          });
+          activateUser(newUser, uname);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Login error");
+      }
+    });
+
+    function activateUser(userData, uid) {
+      currentUser = userData;
+      displayName.textContent = userData.name;
+      avatarPreview.src = userData.avatar;
+      loginContainer.style.display = "none";
+      sidebar.style.display = "block";
+      chatArea.style.display = "flex";
+      serverCreate.style.display = "block";
+      loadServers();
+      loadDMs();
+    }
+
+    async function loadServers() {
+      const res = await fetch(`${BASE_URL}/servers.json`);
+      const servers = await res.json();
+      serverList.innerHTML = '';
+      channelList.innerHTML = '';
+      Object.entries(servers || {}).forEach(([id, server]) => {
+        const name = server?.members?.name || server?.name || id;
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.addEventListener("click", () => {
+          activeServerID = id;
+          loadChannels(id);
+          // Show channel creation if user owns it
+          channelCreate.style.display = server.owner === currentUser.uid ? "block" : "none";
+        });
+        serverList.appendChild(li);
+      });
+    }
+
+    async function loadChannels(serverID) {
+      const res = await fetch(`${BASE_URL}/servers/${serverID}/channels.json`);
+      const channels = await res.json();
+      channelList.innerHTML = '';
+      Object.entries(channels || {}).forEach(([cid, ch]) => {
+        const li = document.createElement("li");
+        li.textContent = ch.name || cid;
+        channelList.appendChild(li);
+      });
+    }
+
+    createServerBtn.addEventListener("click", async () => {
+      const name = newServerName.value.trim();
+      if (!name) return;
+      const newServer = {
+        name,
+        owner: currentUser.uid,
+        members: { name: name }
+      };
+      await fetch(`${BASE_URL}/servers.json`, {
+        method: "POST",
+        body: JSON.stringify(newServer)
+      });
+      newServerName.value = '';
+      loadServers();
+    });
+
+    createChannelBtn.addEventListener("click", async () => {
+            const name = newChannelName.value.trim();
+      if (!name || !activeServerID) return;
+
+      const newChannel = {
+        name,
+        createdBy: currentUser.uid,
+        timestamp: Date.now()
+      };
+
+      await fetch(`${BASE_URL}/servers/${activeServerID}/channels.json`, {
+        method: "POST",
+        body: JSON.stringify(newChannel)
+      });
+
+      newChannelName.value = '';
+      loadChannels(activeServerID);
+    });
+
+    async function loadDMs() {
+      const res = await fetch(`${BASE_URL}/users.json`);
+      const users = await res.json();
+      dmList.innerHTML = '';
+      Object.entries(users || {}).forEach(([uid, user]) => {
+        if (uid === currentUser.uid) return; // Skip self
+        const li = document.createElement("li");
+        li.textContent = user.name || uid;
+        li.addEventListener("click", () => {
+          const msg = document.createElement("div");
+          msg.className = "message";
+          msg.innerHTML = `<strong>DM to ${user.name}</strong>: <em>This feature is coming soon...</em>`;
+          chatBox.appendChild(msg);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
+        dmList.appendChild(li);
+      });
+    }
+
+    sendBtn.addEventListener("click", () => {
+      const text = msgInput.value.trim();
+      if (!text) return;
+      const msgEl = document.createElement("div");
+      msgEl.className = "message";
+      msgEl.innerHTML = `
+        <img src="${avatarPreview.src}" width="24" height="24" style="border-radius:50%;" />
+        <strong>${displayName.textContent}</strong> <span>${text}</span>
+      `;
+      chatBox.appendChild(msgEl);
+      msgInput.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  </script>
 </body>
 </html>

@@ -24,7 +24,7 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
     }
-    input, button {
+    input, button, select {
       display: block;
       width: 100%;
       margin: 0.5em 0;
@@ -49,9 +49,10 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
     }
-    .post img {
+    .post img, .post video {
       max-width: 100%;
       border-radius: 4px;
+      margin-bottom: 0.5em;
     }
     .username {
       font-weight: bold;
@@ -65,7 +66,7 @@
   <form id="uploadForm">
     <input type="text" id="username" placeholder="Your Username" required />
     <input type="text" id="caption" placeholder="Caption" required />
-    <input type="file" id="imageUpload" accept="image/*" required />
+    <input type="file" id="mediaUpload" accept="image/*,video/*" required />
     <button type="submit">Upload Post</button>
   </form>
   <div id="feed"></div>

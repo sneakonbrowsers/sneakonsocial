@@ -6,16 +6,18 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
 
   const username = document.getElementById("username").value.trim();
   const caption = document.getElementById("caption").value.trim();
-  const file = document.getElementById("imageUpload").files[0];
-
+  const file = document.getElementById("mediaUpload").files[0];
   if (!username || !caption || !file) return alert("Please fill out all fields.");
 
   const reader = new FileReader();
   reader.onloadend = async () => {
+    const mediaType = file.type.startsWith("image") ? "image" : "video";
+
     const post = {
       username,
       caption,
-      imageUrl: reader.result,
+      mediaUrl: reader.result,
+      mediaType,
       likes: 0,
       timestamp: Date.now()
     };
@@ -42,9 +44,17 @@ async function loadPosts() {
   posts.forEach(post => {
     const div = document.createElement("div");
     div.className = "post";
+
+    let mediaHTML = "";
+    if (post.mediaType === "image") {
+      mediaHTML = `<img src="${post.mediaUrl}" alt="Uploaded media" />`;
+    } else if (post.mediaType === "video") {
+      mediaHTML = `<video controls src="${post.mediaUrl}"></video>`;
+    }
+
     div.innerHTML = `
       <div class="username">@${post.username}</div>
-      <img src="${post.imageUrl}" alt="Uploaded image" />
+      ${mediaHTML}
       <p>${post.caption}</p>
       <button onclick="likePost('${post.id}', ${post.likes})">❤️ ${post.likes}</button>
     `;
@@ -53,7 +63,7 @@ async function loadPosts() {
 }
 
 async function likePost(id, currentLikes) {
-  await fetch(`https://fidgety-6bac3-default-rtdb.firebaseio.com/posts/${id}.json`, {
+  await fetch(`https://your-project.firebaseio.com/posts/${id}.json`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ likes: currentLikes + 1 })
