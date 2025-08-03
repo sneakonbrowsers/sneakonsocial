@@ -142,6 +142,31 @@
 #chat-area h4:hover {
   background-color: #333;
 }
+
+.kick-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  background-color: #d33;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.danger-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.danger-button:hover {
+  background-color: #c0392b;
+}
   </style>
 </head>
 <body>
@@ -172,6 +197,12 @@
     <button onclick="openDM()">Direct Messages</button>
 
     <a href="explore.html"><button>Explore Posts</button></a>
+    
+    
+  <button id="leave-server-btn" class="danger-button">
+    Leave Server
+  </button>
+</div>
   </div>
 
   <div id="main" class="hidden">
@@ -186,6 +217,7 @@
   const BASE = 'https://fidgety-6bac3-default-rtdb.firebaseio.com';
   let currentUser = null;
   let currentChatPath = null;
+  let currentServerName = null;
   let currentLocation = document.getElementById('current-location');
 
   const loginScreen = document.getElementById('login-screen');
@@ -226,6 +258,15 @@
       loginScreen.classList.add('hidden');
       sidebar.classList.remove('hidden');
       mainScreen.classList.remove('hidden');
+      function checkInviteInURL() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const inviteCode = urlParams.get('invite');
+  if (inviteCode) {
+    console.log("Auto-joining via invite link:", inviteCode);
+    joinServer(inviteCode);
+  }
+}
+checkInviteInURL();
 
       loadServers();
     } catch (err) {
@@ -242,6 +283,34 @@
   }
   return code;
 }
+
+document.getElementById('leave-server-btn').onclick = async () => {
+  if (!currentServerName) return alert("No server selected.");
+
+  const serverRes = await fetch(`${BASE}/servers/${currentServerName}.json`);
+  const server = await serverRes.json();
+
+  if (!server) return alert("Server not found");
+
+  const isOwner = server.owner === currentUser.name;
+
+  if (isOwner) {
+    await fetch(`${BASE}/servers/${currentServerName}.json`, {
+      method: 'DELETE'
+    });
+    alert(`Server "${currentServerName}" deleted because you were the owner.`);
+  } else {
+    await fetch(`${BASE}/servers/${currentServerName}/invitedUsers/${currentUser.name}.json`, {
+      method: 'DELETE'
+    });
+    alert(`You’ve left server: ${currentServerName}`);
+  }
+
+  currentServerName = null;
+  loadServers();
+  document.getElementById('chat-area').innerHTML = '';
+  currentLocation.textContent = 'Direct Messages';
+};
 
 async function createServer() {
   const serverName = document.getElementById('new-server-name').value.trim();
@@ -264,8 +333,8 @@ async function createServer() {
   loadServers();
 }
 
-async function joinServer() {
-  const code = document.getElementById('invite-code').value.trim();
+async function joinServer(codeFromUrl = null) {
+  const code = codeFromUrl || document.getElementById('invite-code').value.trim();
   if (!code) return alert("Enter an invite code");
 
   try {
@@ -351,7 +420,7 @@ async function openDM() {
       currentChatPath = `dm/${threadID}`;
       currentLocation.textContent = `DM with ${uname}`;
       chatArea.innerHTML = '';
-      loadMessages(currentChatPath);
+      loadMessages(currentChatPath,isOwner = false,serverName = null);
     };
 
     chatArea.appendChild(header);
@@ -378,7 +447,9 @@ async function openDM() {
 
 async function loadChannels(serverName, isOwner) {
   const chatArea = document.getElementById('chat-area');
-  chatArea.innerHTML = ''; // Clear previous content
+  currentServerName = serverName;
+  currentLocation.textContent = `Server: ${serverName}`;
+  chatArea.innerHTML = '';
 
   if (messageRefreshInterval) clearInterval(messageRefreshInterval);
 
@@ -390,23 +461,37 @@ async function loadChannels(serverName, isOwner) {
       const header = document.createElement('h4');
       header.textContent = `# ${channelName}`;
       header.setAttribute('data-label', channelName.toLowerCase());
-      header.style.display = 'block';
+      header.style.cursor = 'pointer';
 
       header.onclick = () => {
         openChannel(serverName, channelName);
         currentLocation.textContent = `Channel: #${channelName}`;
       };
 
+      if (isOwner) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑';
+        deleteBtn.title = 'Delete channel';
+        deleteBtn.style.marginLeft = '6px';
+        deleteBtn.onclick = async () => {
+          await fetch(`${BASE}/servers/${serverName}/channels/${channelName}.json`, {
+            method: 'DELETE'
+          });
+          loadChannels(serverName, true); // Refresh
+        };
+
+        header.appendChild(deleteBtn);
+      }
+
       chatArea.appendChild(header);
     });
 
-    // 🔐 Owner-only channel creation
     if (isOwner) {
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'New channel name';
       input.id = 'new-channel-input';
-      input.style.marginTop = '12px';
+      input.style.marginTop = '16px';
       input.style.display = 'block';
 
       const btn = document.createElement('button');
@@ -420,18 +505,64 @@ async function loadChannels(serverName, isOwner) {
           body: JSON.stringify(true)
         });
 
-        loadChannels(serverName, true); // Refresh with ownership flag
+        loadChannels(serverName, true); // Refresh
       };
 
       chatArea.appendChild(input);
       chatArea.appendChild(btn);
+
+      // 🔄 Load user list automatically for owners
+      loadUserList(serverName);
     }
 
   } catch (err) {
     console.error('Error loading channels:', err);
     chatArea.innerHTML = '<p>Failed to load channels.</p>';
   }
-} 
+}
+
+async function loadUserList(serverName) {
+  const userArea = document.getElementById('user-area');
+  userArea.innerHTML = '<h3>Server Members</h3>'; // Always keep header
+
+  try {
+    const res = await fetch(`${BASE}/servers/${serverName}/users.json`);
+    const users = await res.json() || {};
+
+    Object.entries(users).forEach(([userId, username]) => {
+      const entry = document.createElement('div');
+      entry.textContent = username;
+      entry.style.display = 'flex';
+      entry.style.justifyContent = 'space-between';
+      entry.style.alignItems = 'center';
+
+      const kickBtn = document.createElement('button');
+      kickBtn.textContent = 'Kick';
+      kickBtn.onclick = async () => {
+        await fetch(`${BASE}/servers/${serverName}/users/${userId}.json`, {
+          method: 'DELETE'
+        });
+        loadUserList(serverName); // Refresh list
+      };
+
+      entry.appendChild(kickBtn);
+      userArea.appendChild(entry);
+    });
+
+  } catch (err) {
+    console.error('Error loading users:', err);
+    userArea.innerHTML += '<p>Failed to load members.</p>';
+  }
+}
+
+async function leaveServer(serverName, userId) {
+  await fetch(`${BASE}/servers/${serverName}/users/${userId}.json`, {
+    method: 'DELETE'
+  });
+  window.location.reload(); // Or redirect to home
+}
+
+
 
 async function openChannel(serverName, channelName) {
   const fullPath = `servers/${serverName}/channels/${channelName}`;
@@ -440,7 +571,7 @@ async function openChannel(serverName, channelName) {
 
   if (messageRefreshInterval) clearInterval(messageRefreshInterval);
 
-  loadMessages(fullPath);
+  loadMessages(fullPath,s.owner === currentUser.name,serverName);
 }
 
   function applySearch() {
@@ -452,30 +583,32 @@ async function openChannel(serverName, channelName) {
     h.style.display = label && label.includes(query) ? 'block' : 'none';
   });
 }
-async function loadMessages(path) {
+async function loadMessages(path, isOwner, serverName) {
   currentChatPath = path;
   const messageContainer = document.getElementById('chat-area');
-  if (!messageContainer) return console.error("Missing #messages container");
+  if (!messageContainer) return console.error("Missing #chat-area container");
 
   messageContainer.innerHTML = '';
 
   try {
-    // 🧠 Load all users for avatar lookup
-    const userRes = await fetch(`${BASE}/users.json`);
-    const users = await userRes.json() || {};
+    // 🧠 Fetch users and messages
+    const [userRes, msgRes] = await Promise.all([
+      fetch(`${BASE}/users.json`),
+      fetch(`${BASE}/${path}/messages.json`)
+    ]);
 
-    // 📨 Load messages for the current path
-    const msgRes = await fetch(`${BASE}/${path}/messages.json`);
+    const users = await userRes.json() || {};
     const messages = await msgRes.json() || {};
 
+    // 🧵 Render each message
     Object.entries(messages).forEach(([_, msg]) => {
       const wrapper = document.createElement('div');
-      wrapper.classList.add('message');
+      wrapper.className = 'message';
       wrapper.style.display = 'flex';
       wrapper.style.alignItems = 'center';
       wrapper.style.marginBottom = '10px';
 
-      // 🖼️ Use user's actual avatar from Firebase
+      // 🎭 Avatar
       const avatar = document.createElement('img');
       avatar.src = users[msg.sender]?.avatar || `https://i.pravatar.cc/40?u=${msg.sender}`;
       avatar.alt = `${msg.sender}'s avatar`;
@@ -484,16 +617,38 @@ async function loadMessages(path) {
       avatar.style.borderRadius = '50%';
       avatar.style.marginRight = '10px';
 
-      // 💬 Username and message
+      // 🧱 Text block
       const textBlock = document.createElement('div');
+      textBlock.style.display = 'flex';
+      textBlock.style.flexDirection = 'column';
+
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.gap = '8px';
+
       const username = document.createElement('strong');
       username.textContent = msg.sender;
-      username.style.display = 'block';
+      header.appendChild(username);
+
+      // 🧨 Owner-only Kick option
+      if (isOwner && users[msg.sender]) {
+        const kickBtn = document.createElement('button');
+        kickBtn.textContent = 'Kick';
+        kickBtn.className = 'kick-btn';
+        kickBtn.onclick = async () => {
+          await fetch(`${BASE}/servers/${serverName}/users/${msg.sender}.json`, {
+            method: 'DELETE'
+          });
+          loadUserList(serverName);
+        };
+        header.appendChild(kickBtn);
+      }
 
       const text = document.createElement('span');
       text.textContent = msg.text;
 
-      textBlock.appendChild(username);
+      textBlock.appendChild(header);
       textBlock.appendChild(text);
       wrapper.appendChild(avatar);
       wrapper.appendChild(textBlock);
@@ -513,7 +668,7 @@ async function sendMessage() {
 
 const fetchAndRender = async () => {
   if (!currentChatPath) return;
-  await loadMessages(currentChatPath);
+  await loadMessages(currentChatPath, s.owner === currentUser.name, serverName);
 };
 
   const message = {
