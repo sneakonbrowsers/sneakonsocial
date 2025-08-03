@@ -1,63 +1,478 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sneakon Chat - Maintenance Mode</title>
+  <title>Sneakon Social</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #121212;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #eee;
     }
 
-    .container {
-      text-align: center;
-      padding: 2rem;
-      border: 1px solid #333;
-      border-radius: 12px;
-      background-color: #1e1e1e;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: #ff9f43;
-    }
-
-    p {
-      margin-bottom: 2rem;
-      font-size: 1.2rem;
-    }
-
-    .btn {
-      padding: 0.8rem 1.6rem;
-      background-color: #00b894;
-      color: #fff;
-      font-size: 1rem;
+    input, button {
+      margin: 6px 0;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 4px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
     }
 
-    .btn:hover {
-      background-color: #019875;
+    input {
+      background-color: #1e1e1e;
+      color: #eee;
+      border: 1px solid #333;
     }
+
+    button {
+      background-color: #333;
+      color: #eee;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    #login-screen, #main {
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #sidebar {
+      background: #1e1e1e;
+      color: #eee;
+      padding: 20px;
+      width: 220px;
+      min-height: 100vh;
+      float: left;
+    }
+
+    #chat-area {
+      margin-left: 240px;
+      padding: 20px;
+      padding-bottom: 80px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+
+    .message {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .message img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .text {
+      background: #2a2a2a;
+      color: #eee;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 600px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    #chat-input {
+      position: fixed;
+      bottom: 20px;
+      left: 240px;
+      width: calc(100% - 260px);
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background-color: #1e1e1e;
+      color: #eee;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    #send-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    h3, h4 {
+      margin: 10px 0;
+    }
+
+    #avatar-preview {
+      margin-top: 6px;
+      border-radius: 6px;
+    }
+
+    #invite-code-output {
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    #dm-user-list h4 {
+  padding: 6px 12px;
+  margin: 4px 0;
+  background-color: #1c1c1c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#dm-user-list h4:hover {
+  background-color: #333;
+}
+
+#chat-area h4 {
+  padding: 6px 12px;
+  margin: 4px 0;
+  background-color: #1c1c1c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#chat-area h4:hover {
+  background-color: #333;
+}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🛠️ Sneakon Chat Is Temporarily Offline</h1>
-    <p>We’re in maintenance mode right now to improve the experience. Sneakon Explore is still available, so go check it out!</p>
-    <button class="btn" onclick="location.href='https://sneakonbrowsers.github.io/sneakonsocial'">Go to Sneakon Explore</button>
+  <div id="login-screen">
+    <h2>Login to Sneakon</h2>
+    <input id="login-username" placeholder="Username"><br>
+    <input id="login-password" type="password" placeholder="Password"><br>
+    <input type="file" id="login-avatar"><br>
+    <img id="avatar-preview" width="80"><br>
+    <button onclick="login()">Login</button>
   </div>
+
+  <div id="sidebar" class="hidden">
+    <h3>Servers</h3>
+    <ul id="server-list"></ul>
+
+    <input id="new-server-name" placeholder="New server name">
+    <button onclick="createServer()">Create Server</button><br>
+
+    <input id="invite-code" placeholder="Enter invite code">
+    <button onclick="joinServer()">Join Server</button><br><br>
+
+    <h4>Invite Code Generator</h4>
+    <input id="invite-server-name" placeholder="Server name">
+    <button onclick="generateInviteCode()">Get Code</button>
+    <div id="invite-code-output"></div><br>
+
+    <button onclick="openDM()">Direct Messages</button>
+  </div>
+
+  <div id="main" class="hidden">
+    <h3 id="current-location">Welcome</h3>  
+    <input id="search-bar" type="text" placeholder="Search channels or users..." oninput="applySearch()" />
+    <div id="chat-area"></div>
+    <input id="chat-input" placeholder="Type a message...">
+    <button id="send-btn" onclick="sendMessage()">Send</button>
+  </div>
+<script>
+  let messageRefreshInterval = null;
+  const BASE = 'https://fidgety-6bac3-default-rtdb.firebaseio.com';
+  let currentUser = null;
+  let currentChatPath = null;
+  let currentLocation = document.getElementById('current-location');
+
+  const loginScreen = document.getElementById('login-screen');
+  const mainScreen = document.getElementById('main');
+  const sidebar = document.getElementById('sidebar');
+  const avatarInput = document.getElementById('login-avatar');
+  const avatarPreview = document.getElementById('avatar-preview');
+
+  avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => avatarPreview.src = reader.result;
+      reader.readAsDataURL(file);
+    }
+  });
+
+  async function login() {
+    const uname = document.getElementById('login-username').value.trim();
+    const pass = document.getElementById('login-password').value.trim();
+    const avatarData = avatarPreview.src || `https://i.pravatar.cc/100?u=${uname}`;
+    if (!uname || !pass) return alert("Username and password required");
+
+    try {
+      const res = await fetch(`${BASE}/users/${uname}.json`);
+      const user = await res.json();
+
+      if (user && user.password !== pass) return alert("Incorrect password");
+
+      if (!user) {
+        await fetch(`${BASE}/users/${uname}.json`, {
+          method: 'PUT',
+          body: JSON.stringify({ password: pass, avatar: avatarData })
+        });
+      }
+
+      currentUser = { name: uname, avatar: avatarData };
+      loginScreen.classList.add('hidden');
+      sidebar.classList.remove('hidden');
+      mainScreen.classList.remove('hidden');
+
+      loadServers();
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert("Check your Firebase URL or network connection.");
+    }
+  }
+
+  function generateCode(length = 6) {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function createServer() {
+  const serverName = document.getElementById('new-server-name').value.trim();
+  if (!serverName) return alert("Enter a server name");
+
+  const inviteCode = generateCode();
+
+  const serverData = {
+    owner: currentUser.name,
+    inviteCode,
+    invitedUsers: { [currentUser.name]: true },
+    channels: { general: true }
+  };
+
+  await fetch(`${BASE}/servers/${serverName}.json`, {
+    method: 'PUT',
+    body: JSON.stringify(serverData)
+  });
+
+  loadServers();
+}
+
+async function joinServer() {
+  const code = document.getElementById('invite-code').value.trim();
+  if (!code) return alert("Enter an invite code");
+
+  try {
+    const res = await fetch(`${BASE}/servers.json`);
+    const servers = await res.json();
+
+    let matchName = null;
+    for (let name in servers) {
+      const server = servers[name];
+      if (server.inviteCode === code) {
+        matchName = name;
+        break;
+      }
+    }
+
+    if (!matchName) return alert("Invalid invite code");
+
+    const serverPath = `${BASE}/servers/${matchName}`;
+    const serverRes = await fetch(`${serverPath}.json`);
+    const server = await serverRes.json();
+
+    server.invitedUsers = server.invitedUsers || {};
+    server.invitedUsers[currentUser.name] = true;
+
+    await fetch(`${serverPath}/invitedUsers.json`, {
+      method: 'PUT',
+      body: JSON.stringify(server.invitedUsers)
+    });
+
+    alert(`Joined server: ${matchName}`);
+    loadServers();
+  } catch (err) {
+    console.error("Failed to join server:", err);
+    alert("Network error. Please try again.");
+  }
+}
+
+  function generateInviteCode() {
+  const name = document.getElementById('invite-server-name').value.trim();
+  if (!name) return alert("Server name required");
+
+  fetch(`${BASE}/servers/${name}.json`)
+    .then(res => res.json())
+    .then(server => {
+      if (!server) {
+        return alert("Server not found.");
+      }
+      if (server.owner !== currentUser.name) {
+        return alert("Only the server owner can view the invite code.");
+      }
+
+      const code = server.inviteCode || '(No code stored)';
+      document.getElementById('invite-code-output').innerText = `Invite code: ${code}`;
+    })
+    .catch(err => {
+      console.error("Error retrieving server:", err);
+      alert("Something went wrong fetching the invite code.");
+    });
+}
+
+async function openDM() {
+  currentLocation.textContent = "Direct Messages";
+  currentChatPath = null;
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = ''; // Clear chat area
+
+  if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+
+  const res = await fetch(`${BASE}/users.json`);
+  const users = await res.json() || {};
+
+  for (let uname in users) {
+    if (uname === currentUser.name) continue;
+
+    const header = document.createElement('h4');
+    header.textContent = `@ ${uname}`;
+    header.setAttribute('data-label', uname.toLowerCase());
+    header.style.display = 'block'; // Show by default
+
+    header.onclick = () => {
+      const names = [currentUser.name, uname].sort();
+      const threadID = `${names[0]}_${names[1]}`;
+      currentChatPath = `dm/${threadID}`;
+      currentLocation.textContent = `DM with ${uname}`;
+      chatArea.innerHTML = '';
+      loadMessages(currentChatPath);
+    };
+
+    chatArea.appendChild(header);
+  }
+}
+
+  async function loadServers() {
+    const res = await fetch(`${BASE}/servers.json`);
+    const servers = await res.json() || {};
+    const list = document.getElementById('server-list');
+    list.innerHTML = '';
+
+    for (let name in servers) {
+      const s = servers[name];
+      const isMember = s.owner === currentUser.name || (s.invitedUsers && s.invitedUsers[currentUser.name]);
+      if (isMember) {
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.onclick = () => loadChannels(name, s.owner === currentUser.name);
+        list.appendChild(li);
+      }
+    }
+  }
+
+async function loadChannels(serverName) {
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = ''; // Clear previous content
+
+  if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+
+  try {
+    const res = await fetch(`${BASE}/servers/${serverName}/channels.json`);
+    const data = await res.json() || {};
+
+    const channelList = Object.keys(data); // Converts object keys to array
+
+    channelList.forEach(channel => {
+      const header = document.createElement('h4');
+      header.textContent = `# ${channel}`;
+      header.setAttribute('data-label', channel.toLowerCase());
+      header.style.display = 'block'; // Show by default
+
+      header.onclick = () => {
+        openChannel(channel);
+        currentLocation.textContent = `Channel: #${channel}`;
+      };
+
+      chatArea.appendChild(header);
+    });
+
+  } catch (err) {
+    console.error('Error loading channels:', err);
+    chatArea.innerHTML = '<p>Failed to load channels. 🛠️</p>';
+  }
+}
+
+async function openChannel(channelName) {
+  currentLocation.textContent = `Channel: #${channelName}`;
+  currentChatPath = `channel/${channelName}`;
+
+  if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+
+  loadMessages(currentChatPath); // Reuse your existing message loader
+}
+
+  function applySearch() {
+  const query = document.getElementById('search-bar').value.toLowerCase();
+  const headers = document.querySelectorAll('#chat-area h4');
+
+  headers.forEach(h => {
+    const label = h.getAttribute('data-label');
+    h.style.display = label && label.includes(query) ? 'block' : 'none';
+  });
+}
+  async function loadMessages(path) {
+  if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+  currentChatPath = path;
+
+  async function fetchAndRender() {
+    const res = await fetch(`${BASE}/messages/${path}.json`);
+    const messages = await res.json() || {};
+    const chat = document.getElementById('chat-area');
+    chat.innerHTML = '';
+
+    Object.values(messages)
+      .sort((a,b) => a.timestamp - b.timestamp)
+      .forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `
+          <img src="${msg.avatar}" alt="avatar">
+          <div class="text"><strong>${msg.author}</strong>: ${msg.content}</div>
+        `;
+        chat.appendChild(div);
+      });
+
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  await fetchAndRender();
+  messageRefreshInterval = setInterval(fetchAndRender, 4000); // refresh every 4s
+}
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentChatPath) return;
+
+    const msg = {
+      author: currentUser.name,
+      avatar: currentUser.avatar,
+      content: text,
+      timestamp: Date.now()
+    };
+
+    await fetch(`${BASE}/messages/${currentChatPath}.json`, {
+      method: 'POST',
+      body: JSON.stringify(msg)
+    });
+
+    input.value = '';
+    loadMessages(currentChatPath);
+  }
+</script>
 </body>
 </html>

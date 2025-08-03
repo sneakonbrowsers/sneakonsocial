@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f8;
+      background: #000000;
       max-width: 600px;
       margin: 2em auto;
       padding: 1em;
@@ -15,27 +15,45 @@
     }
     h1 {
       text-align: center;
-      color: #333;
+      color: #ffffff;
     }
     form {
-      margin-bottom: 2em;
-      padding: 1em;
-      background: #fff;
+      padding-bottom: 2em;
+      padding-top: 2em;
+      padding-right: 2em;
+      padding-left: 2em;
+      background: #000000;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      border: 3px;
+      border-color: #fff;
+      border-style: solid;
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
     }
     input, button, select {
       display: block;
       width: 100%;
-      margin: 0.5em 0;
+      align-content: center;
       padding: 0.7em;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 1em;
+      background-color: #000000;
+      text-align:center;
+      color:#ffffff;;
+      align-self: center  ;
+    }
+
+    input::placeholder {
+      color: #FFFFFF; /* Change to your desired color */
+      opacity: 1;     /* Optional: ensures full opacity */
     }
     button {
       background: #0066cc;
-      color: #fff;
+      color: #ffffff;
       cursor: pointer;
       border: none;
     }
@@ -43,11 +61,19 @@
       background: #004999;
     }
     #feed .post {
-      background: #fff;
+      background: #000000;
       margin-bottom: 1em;
       padding: 1em;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      border: 3px;
+      border-color: #fff;
+      border-style: solid;
+    }
+    .post p {
+      display: block;
+      margin-bottom: 0.5em;
+      color: #fff;
     }
     .post img, .post video {
       max-width: 100%;
