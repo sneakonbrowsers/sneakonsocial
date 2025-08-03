@@ -6,32 +6,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #0d0d0f;
       color: #f1f1f1;
-      overflow: hidden;
     }
     header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       background: #1c1c1f;
-      border-bottom: 1px solid #333;
       padding: 10px;
+      border-bottom: 1px solid #333;
     }
     #avatarPreview {
-      border-radius: 50%;
-      border: 2px solid #444;
       width: 32px;
       height: 32px;
+      border-radius: 50%;
       object-fit: cover;
+      border: 2px solid #444;
     }
     #displayName { font-weight: bold; font-size: 1.1em; }
-    #chatTitle { font-size: 1.1em; margin-left: auto; }
+    #chatTitle { margin-left: auto; font-size: 1.1em; }
 
+    #loginContainer {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #loginContainer input {
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #252528;
+      color: #f1f1f1;
+    }
+    #loginContainer button {
+      padding: 8px 12px;
+      background: #393943;
+      border: none;
+      border-radius: 6px;
+      color: #f1f1f1;
+      cursor: pointer;
+    }
     #sidebar {
       position: absolute;
       top: 54px;
@@ -39,8 +58,8 @@
       width: 240px;
       height: calc(100vh - 54px);
       background: #141417;
-      border-right: 1px solid #333;
       padding: 10px;
+      border-right: 1px solid #333;
       overflow-y: auto;
     }
     #chatArea {
@@ -56,134 +75,135 @@
       flex-grow: 1;
       overflow-y: auto;
       background: #111;
-      border: 1px solid #333;
       padding: 10px;
       border-radius: 6px;
+      border: 1px solid #333;
       margin-bottom: 10px;
     }
     .message {
       display: flex;
       align-items: center;
+      gap: 6px;
       margin-bottom: 10px;
-      padding: 6px;
       background: #2a2a2f;
+      padding: 6px;
       border-radius: 6px;
-      cursor: pointer;
     }
-    .message:hover { background: #38383d; }
-    .message img {
-      border-radius: 50%;
-      margin-right: 8px;
-      width: 24px;
-      height: 24px;
-    }
-    .message strong { margin-right: 6px; }
-
-    #typingStatus {
-      font-style: italic;
-      color: #ccc;
-      height: 18px;
-      margin-bottom: 6px;
-    }
-
     input[type="text"] {
       flex-grow: 1;
       padding: 8px;
-      font-size: 1em;
       background: #252528;
       border: 1px solid #444;
       border-radius: 6px;
       color: #f1f1f1;
     }
-
+    button:hover { background: #57575f; }
     button {
       padding: 8px 12px;
-      font-size: 1em;
+      margin-left: 6px;
       background: #393943;
       color: #f1f1f1;
       border: none;
       border-radius: 6px;
-      margin-left: 8px;
       cursor: pointer;
     }
-
-    button:hover { background: #57575f; }
-
-    #serverList li, #channelList li {
+    li {
       background: #1f1f22;
-      margin-bottom: 6px;
       padding: 6px;
       border-radius: 4px;
+      margin-bottom: 6px;
       cursor: pointer;
     }
-
-    #serverList li:hover, #channelList li:hover {
-      background: #2c2c30;
-    }
+    li:hover { background: #2c2c30; }
   </style>
-</head>
-<body>
-
-  <header>
-    <img id="avatarPreview" src="" alt="Avatar" />
-    <span id="displayName">guest</span>
-    <button id="createServerBtn">+ Server</button>
-    <button id="createChannelBtn">+ Channel</button>
-    <span id="chatTitle">Sneakon</span>
-  </header>
-
-  <div id="sidebar">
-    <h3>Servers</h3>
-    <ul id="serverList"></ul>
-    <h3>Channels</h3>
-    <ul id="channelList"></ul>
-  </div>
-
-  <div id="chatArea">
-    <div id="chatBox"></div>
-    <div id="typingStatus"></div>
-    <div style="display: flex;">
-      <input type="text" id="msgInput" placeholder="Speak your mind..." />
-      <button id="sendBtn">Send</button>
-    </div>
-  </div>
 
   <script type="module">
-    // 🧠 Simulated identity (replace with real user logic)
-    const user = {
-      uid: "user_abc123",
-      name: "Sneakonaut",
-      avatar: "https://i.pravatar.cc/100?u=abc123"
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
     };
 
-    // ⛓ Wait for DOM
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     window.addEventListener("DOMContentLoaded", () => {
-      // Inject user profile
-      document.getElementById("displayName").textContent = user.name || "guest";
-      document.getElementById("avatarPreview").src = user.avatar || "";
+      const loginContainer = document.getElementById("loginContainer");
+      const sidebar = document.getElementById("sidebar");
+      const chatArea = document.getElementById("chatArea");
 
-      // Sample server/channel data
-      const servers = ["🪐 ExoNet", "🎮 Arcade Zone", "📖 LoreVerse"];
-      const channels = ["#general", "#lore", "#trade"];
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+      const loginBtn = document.getElementById("loginBtn");
 
-      // Populate lists
-      const serverList = document.getElementById("serverList");
-      servers.forEach(s => {
-        const li = document.createElement("li");
-        li.textContent = s;
-        serverList.appendChild(li);
+      loginBtn.addEventListener("click", () => {
+        const uname = usernameInput.value.trim();
+        const pass = passwordInput.value.trim();
+
+        const userRef = ref(db, `users/${uname}`);
+        onValue(userRef, snapshot => {
+          const userData = snapshot.val();
+          if (!userData) return alert("User not found");
+
+          if (userData.password === pass) {
+            loginContainer.style.display = "none";
+            sidebar.style.display = "block";
+            chatArea.style.display = "flex";
+
+            document.getElementById("displayName").textContent = userData.name || uname;
+            document.getElementById("avatarPreview").src = userData.avatar || "";
+
+            loadServers(userData.uid || uname);
+          } else {
+            alert("Incorrect password");
+          }
+        }, { onlyOnce: true });
       });
 
-      const channelList = document.getElementById("channelList");
-      channels.forEach(c => {
-        const li = document.createElement("li");
-        li.textContent = c;
-        channelList.appendChild(li);
-      });
+      function loadServers(userId) {
+        const serverList = document.getElementById("serverList");
+        const channelList = document.getElementById("channelList");
 
-      // Messaging logic
-      const msgInput = document.getElementById("msgInput");
+        onValue(ref(db, 'servers'), snapshot => {
+          serverList.innerHTML = '';
+          channelList.innerHTML = '';
+
+          snapshot.forEach(serverSnap => {
+            const serverId = serverSnap.key;
+            const serverData = serverSnap.val();
+            const name = serverData?.members?.name || serverData?.name || serverId;
+
+            const li = document.createElement("li");
+            li.textContent = name;
+
+            li.addEventListener("click", () => {
+              channelList.innerHTML = '';
+              const channelRef = ref(db, `servers/${serverId}/channels`);
+              onValue(channelRef, channelSnap => {
+                channelList.innerHTML = '';
+                channelSnap.forEach(ch => {
+                  const chName = ch.val()?.name || ch.key;
+                  const channelLi = document.createElement("li");
+                  channelLi.textContent = chName;
+                  channelList.appendChild(channelLi);
+                });
+              });
+            });
+
+            serverList.appendChild(li);
+          });
+        });
+      }
+
       const sendBtn = document.getElementById("sendBtn");
+      const msgInput = document.getElementById("msgInput");
       const chatBox = document.getElementById("chatBox");
 
       sendBtn.addEventListener("click", () => {
@@ -193,14 +213,42 @@
         const msgEl = document.createElement("div");
         msgEl.className = "message";
         msgEl.innerHTML = `
-          <img src="${user.avatar}" alt="avatar" />
-          <strong>${user.name}</strong> <span>${text}</span>
+          <img src="${avatarPreview.src}" width="24" height="24" style="border-radius:50%;" />
+          <strong>${displayName.textContent}</strong> <span>${text}</span>
         `;
         chatBox.appendChild(msgEl);
-        msgInput.value = "";
+        msgInput.value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
       });
     });
   </script>
+</head>
+<body>
+  <header>
+    <img id="avatarPreview" src="" alt="Avatar" />
+    <span id="displayName"></span>
+    <span id="chatTitle">Sneakon</span>
+  </header>
+
+  <div id="loginContainer">
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+  </div>
+
+  <div id="sidebar" style="display:none;">
+    <h3>Servers</h3>
+    <ul id="serverList"></ul>
+    <h3>Channels</h3>
+    <ul id="channelList"></ul>
+  </div>
+
+  <div id="chatArea" style="display:none;">
+    <div id="chatBox"></div>
+    <div style="display: flex;">
+      <input type="text" id="msgInput" placeholder="Speak your mind..." />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
 </body>
 </html>
