@@ -451,7 +451,7 @@ async function loadChannels(serverName, isOwner) {
   currentLocation.textContent = `Server: ${serverName}`;
   chatArea.innerHTML = '';
 
-  if (channelRefreshInterval) {
+  if (messageRefreshInterval) {
   clearInterval(messageRefreshInterval);
   messageRefreshInterval = null;
 }
