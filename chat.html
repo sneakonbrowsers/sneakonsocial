@@ -41,29 +41,55 @@
       const loginBtn = document.getElementById("loginBtn");
 
       loginBtn.addEventListener("click", async () => {
-        const uname = usernameInput.value.trim();
-        const pass = passwordInput.value.trim();
+  const uname = usernameInput.value.trim();
+  const pass = passwordInput.value.trim();
 
-        try {
-          const res = await fetch(`${BASE_URL}/users/${uname}.json`);
-          const userData = await res.json();
+  if (!uname || !pass) return alert("Please enter both username and password");
 
-          if (!userData) return alert("User not found");
-          if (userData.password !== pass) return alert("Incorrect password");
+  try {
+    const res = await fetch(`${BASE_URL}/users/${uname}.json`);
+    const userData = await res.json();
 
-          loginContainer.style.display = "none";
-          sidebar.style.display = "block";
-          chatArea.style.display = "flex";
+    // 🟢 User exists: check password
+    if (userData) {
+      if (userData.password !== pass) return alert("Incorrect password");
 
-          document.getElementById("displayName").textContent = userData.name || uname;
-          document.getElementById("avatarPreview").src = userData.avatar || "";
+      activateUser(userData.name || uname, userData.avatar || "", uname);
+    } else {
+      // 🆕 Create new user
+      const newUser = {
+        name: uname,
+        password: pass,
+        avatar: `https://i.pravatar.cc/100?u=${uname}`, // 🎭 Default avatar
+        uid: uname
+      };
 
-          loadServers();
-        } catch (err) {
-          console.error("Login error:", err);
-          alert("Error connecting to Firebase");
-        }
+      const createRes = await fetch(`${BASE_URL}/users/${uname}.json`, {
+        method: "PUT",
+        body: JSON.stringify(newUser)
       });
+
+      if (createRes.ok) {
+        activateUser(newUser.name, newUser.avatar, uname);
+      } else {
+        alert("Failed to create user");
+      }
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Login failed");
+  }
+});
+
+// 🎮 User UI activation
+function activateUser(name, avatar, uid) {
+  loginContainer.style.display = "none";
+  sidebar.style.display = "block";
+  chatArea.style.display = "flex";
+  document.getElementById("displayName").textContent = name;
+  document.getElementById("avatarPreview").src = avatar;
+  loadServers(uid);
+}
 
       async function loadServers() {
         try {
