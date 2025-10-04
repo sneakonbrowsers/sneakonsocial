@@ -57,14 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const post = {
-        username,
-        caption,
-        mediaType,
-        mediaUrl,
-        timestamp: Date.now(),
-        reactions: {},
-        comments: {}
-      };
+  username,
+  caption,
+  mediaType,
+  mediaUrl,
+  timestamp: Date.now(),
+  reactions: {},
+  comments: {},
+  verified: existing?.verified || false
+};
 
       await fetch(`${DB_BASE}.json`, {
         method: "POST",
@@ -227,7 +228,12 @@ async function addComment(e, postId, commentsWrap, form) {
       });
     }
 
-    const comment = { username, text, timestamp: Date.now() };
+    const comment = {
+  username,
+  text,
+  timestamp: Date.now(),
+  verified: existing?.verified || false
+};
 
     await fetch(`${DB_BASE}/${postId}/comments.json`, {
       method: "POST",
