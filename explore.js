@@ -204,14 +204,37 @@ async function addComment(e, postId, commentsWrap, form) {
   const text = form.text.value.trim();
   if (!username || !text) return;
 
-  const comment = { username, text, timestamp: Date.now() };
+  const password = prompt("Enter your password:");
+  if (!password || password.trim() === "") {
+    alert("Password is required to comment.");
+    return;
+  }
 
   try {
+    const userRes = await fetch(`${USER_BASE}/${username}.json`);
+    const existing = await userRes.json();
+
+    if (existing && existing.password !== password) {
+      alert("Incorrect password for this username.");
+      return;
+    }
+
+    if (!existing) {
+      await fetch(`${USER_BASE}/${username}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+    }
+
+    const comment = { username, text, timestamp: Date.now() };
+
     await fetch(`${DB_BASE}/${postId}/comments.json`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(comment)
     });
+
     commentsWrap.appendChild(renderComment(comment));
     form.reset();
   } catch (err) {
