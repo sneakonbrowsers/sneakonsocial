@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   timestamp: Date.now(),
   reactions: {},
   comments: {},
-  verified: existing?.verified || false
+  verified: existing?.verified === true
 };
 
       await fetch(`${DB_BASE}.json`, {
@@ -121,7 +121,9 @@ function renderPost(postId, post) {
   const postEl = document.createElement("div");
   postEl.className = "post";
 
-  const verifiedMark = post.verified ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>' : '';
+  const verifiedMark = post.verified === true
+  ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>'
+  : '';
   const captionEl = document.createElement("p");
   captionEl.innerHTML = `<span class="username">@${post.username}${verifiedMark}</span>: ${post.caption}`;
   postEl.appendChild(captionEl);
@@ -180,7 +182,9 @@ function renderComment(comment) {
   cEl.style.margin = "6px 0";
   cEl.style.color = "#fff";
 
-  const verifiedMark = comment.verified ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>' : '';
+  const verifiedMark = comment.verified === true
+  ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>'
+  : '';
   cEl.innerHTML = `<strong>@${comment.username}${verifiedMark}</strong>: ${comment.text}`;
   return cEl;
 }
@@ -232,7 +236,7 @@ async function addComment(e, postId, commentsWrap, form) {
   username,
   text,
   timestamp: Date.now(),
-  verified: existing?.verified || false
+  verified: existing?.verified === true
 };
 
     await fetch(`${DB_BASE}/${postId}/comments.json`, {
