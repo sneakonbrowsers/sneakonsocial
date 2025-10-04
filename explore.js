@@ -1,14 +1,13 @@
 const DB_BASE = "https://fidgety-6bac3-default-rtdb.firebaseio.com/posts";
+const USER_BASE = "https://fidgety-6bac3-default-rtdb.firebaseio.com/users";
 
 // ===== DOM Ready =====
 document.addEventListener("DOMContentLoaded", () => {
   const feedContainer = document.getElementById("feed");
   const uploadForm = document.getElementById("uploadForm");
 
-  // Load posts on start
   loadPosts(feedContainer);
 
-  // Handle new post upload
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -22,34 +21,57 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    let mediaUrl = null;
-    let mediaType = null;
-
-    if (file) {
-      if (file.type.startsWith("image/")) {
-        mediaType = "image";
-      } else if (file.type.startsWith("video/")) {
-        mediaType = "video";
-      }
-      mediaUrl = await fileToDataURI(file);
+    const password = prompt("Enter your password:");
+    if (!password || password.trim() === "") {
+      alert("Password is required");
+      return;
     }
 
-    const post = {
-      username,
-      caption,
-      mediaType,
-      mediaUrl,
-      timestamp: Date.now(),
-      reactions: {},
-      comments: {}
-    };
-
     try {
+      const userRes = await fetch(`${USER_BASE}/${username}.json`);
+      const existing = await userRes.json();
+
+      if (existing && existing.password !== password) {
+        alert("Incorrect password for this username.");
+        return;
+      }
+
+      if (!existing) {
+        await fetch(`${USER_BASE}/${username}.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+      }
+
+      let mediaUrl = null;
+      let mediaType = null;
+
+      if (file) {
+        if (file.type.startsWith("image/")) {
+          mediaType = "image";
+        } else if (file.type.startsWith("video/")) {
+          mediaType = "video";
+        }
+        mediaUrl = await fileToDataURI(file);
+      }
+
+      const post = {
+        username,
+        caption,
+        mediaType,
+        mediaUrl,
+        timestamp: Date.now(),
+        reactions: {},
+        comments: {}
+      };
+
       await fetch(`${DB_BASE}.json`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(post)
       });
+
       uploadForm.reset();
       loadPosts(feedContainer);
     } catch (err) {
@@ -98,7 +120,6 @@ function renderPost(postId, post) {
   const postEl = document.createElement("div");
   postEl.className = "post";
 
-  // Username + optional verified check
   const verifiedMark = post.verified ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>' : '';
   const captionEl = document.createElement("p");
   captionEl.innerHTML = `<span class="username">@${post.username}${verifiedMark}</span>: ${post.caption}`;
@@ -115,7 +136,6 @@ function renderPost(postId, post) {
     postEl.appendChild(vid);
   }
 
-  // Reactions display
   const reactionDisplay = document.createElement("div");
   reactionDisplay.className = "reaction-display";
   reactionDisplay.style.marginTop = "8px";
@@ -123,7 +143,6 @@ function renderPost(postId, post) {
   updateReactionDisplay(reactionDisplay, post.reactions || {});
   postEl.appendChild(reactionDisplay);
 
-  // React button
   const reactBtn = document.createElement("button");
   reactBtn.type = "button";
   reactBtn.textContent = "React ✨";
@@ -131,7 +150,6 @@ function renderPost(postId, post) {
   reactBtn.addEventListener("click", () => openEmojiPicker(postId, reactionDisplay));
   postEl.appendChild(reactBtn);
 
-  // Comments list
   const commentsWrap = document.createElement("div");
   commentsWrap.className = "comments";
   if (post.comments) {
@@ -141,7 +159,6 @@ function renderPost(postId, post) {
   }
   postEl.appendChild(commentsWrap);
 
-  // Comment form
   const form = document.createElement("form");
   form.style.marginTop = "8px";
   form.innerHTML = `
@@ -160,7 +177,7 @@ function renderComment(comment) {
   const cEl = document.createElement("div");
   cEl.className = "comment";
   cEl.style.margin = "6px 0";
-  cEl.style.color = "#fff"; // readable on dark background
+  cEl.style.color = "#fff";
 
   const verifiedMark = comment.verified ? ' <span title="Verified" style="color:#3bf742;">VERIFIED</span>' : '';
   cEl.innerHTML = `<strong>@${comment.username}${verifiedMark}</strong>: ${comment.text}`;
@@ -250,7 +267,7 @@ function openEmojiPicker(postId, reactionsWrap) {
     fontSize: "18px",
     color: "#ccc",
     background: "none",
-    border: "none",
+        border: "none",
     cursor: "pointer"
   });
   closeBtn.addEventListener("click", () => picker.remove());
@@ -273,9 +290,7 @@ async function react(postId, emoji, reactionsWrap) {
       body: JSON.stringify(updated)
     });
 
-    // Update the UI immediately without reloading the whole feed
     updateReactionDisplay(reactionsWrap, updated);
-
   } catch (err) {
     alert("Failed to react: " + err.message);
   }
