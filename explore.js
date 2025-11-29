@@ -153,6 +153,7 @@ function renderPost(postId, post) {
   reactBtn.addEventListener("click", () => openEmojiPicker(postId, reactionDisplay));
   postEl.appendChild(reactBtn);
 
+  /*
   const commentsWrap = document.createElement("div");
   commentsWrap.className = "comments";
   if (post.comments) {
@@ -173,6 +174,7 @@ function renderPost(postId, post) {
   postEl.appendChild(form);
 
   return postEl;
+  */
 }
 
 // ===== Render comment =====
